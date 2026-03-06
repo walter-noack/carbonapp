@@ -83,7 +83,7 @@ export default function Users() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -92,7 +92,7 @@ export default function Users() {
         </div>
         <button
           onClick={openCreate}
-          className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          className="bg-[#0068ec] hover:bg-[#005acc] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
         >
           + Nuevo usuario
         </button>
@@ -110,6 +110,7 @@ export default function Users() {
         </div>
       ) : (
         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
@@ -164,6 +165,7 @@ export default function Users() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
@@ -184,7 +186,7 @@ export default function Users() {
                   required
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0068ec] focus:border-transparent"
                   placeholder="Juan Pérez"
                 />
               </div>
@@ -198,7 +200,7 @@ export default function Users() {
                       type="email"
                       value={form.email}
                       onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0068ec] focus:border-transparent"
                       placeholder="juan@empresa.cl"
                     />
                   </div>
@@ -210,7 +212,7 @@ export default function Users() {
                       minLength={8}
                       value={form.password}
                       onChange={(e) => setForm({ ...form, password: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0068ec] focus:border-transparent"
                       placeholder="Mínimo 8 caracteres"
                     />
                   </div>
@@ -223,7 +225,7 @@ export default function Users() {
                   <select
                     value={form.role}
                     onChange={(e) => setForm({ ...form, role: e.target.value, org: '' })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0068ec] focus:border-transparent bg-white"
                   >
                     <option value="consultant">consultant</option>
                     <option value="admin">admin</option>
@@ -236,7 +238,7 @@ export default function Users() {
                     <select
                       value={form.org}
                       onChange={(e) => setForm({ ...form, org: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0068ec] focus:border-transparent bg-white"
                     >
                       <option value="">Sin asignar</option>
                       {orgs.map((o) => (
@@ -279,7 +281,7 @@ export default function Users() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm font-medium py-2 rounded-lg transition-colors"
+                  className="flex-1 bg-[#0068ec] hover:bg-[#005acc] disabled:opacity-50 text-white text-sm font-medium py-2 rounded-lg transition-colors"
                 >
                   {saving ? 'Guardando...' : 'Guardar'}
                 </button>

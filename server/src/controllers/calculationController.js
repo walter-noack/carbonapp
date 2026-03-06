@@ -68,14 +68,18 @@ const getCalculationById = async (req, res) => {
 
 const updateCalculation = async (req, res) => {
   try {
-    const allowed = ['status', 'notes']
-    const updates = {}
-    allowed.forEach((k) => { if (req.body[k] !== undefined) updates[k] = req.body[k] })
-
-    const calc = await Calculation.findByIdAndUpdate(req.params.id, updates, { new: true })
+    const calc = await Calculation.findById(req.params.id)
       .populate('org', 'name')
       .populate('createdBy', 'name')
     if (!calc) return res.status(404).json({ message: 'Cálculo no encontrado' })
+
+    if (req.user.role !== 'admin' && calc.org._id.toString() !== req.user.org?.toString()) {
+      return res.status(403).json({ message: 'Acceso denegado' })
+    }
+
+    const allowed = ['status', 'notes']
+    allowed.forEach((k) => { if (req.body[k] !== undefined) calc[k] = req.body[k] })
+    await calc.save()
     res.json(calc)
   } catch {
     res.status(500).json({ message: 'Error del servidor' })

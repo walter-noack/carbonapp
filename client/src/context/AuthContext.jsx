@@ -22,6 +22,12 @@ export function AuthProvider({ children }) {
     return data.user
   }
 
+  const updateUser = (updatedUser) => {
+    const merged = { ...user, ...updatedUser }
+    localStorage.setItem('user', JSON.stringify(merged))
+    setUser(merged)
+  }
+
   const logout = async () => {
     try { await api.post('/auth/logout') } catch { /* ignorar */ }
     localStorage.clear()
@@ -29,7 +35,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   )

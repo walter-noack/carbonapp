@@ -35,7 +35,7 @@ export default function Dashboard() {
   }, [])
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-900">Panel</h2>
         <p className="text-sm text-gray-500 mt-0.5">Bienvenido, {user?.name}.</p>

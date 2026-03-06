@@ -61,9 +61,48 @@ const refresh = async (req, res) => {
   }
 }
 
+const updateProfile = async (req, res) => {
+  try {
+    const { name } = req.body
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: 'El nombre es requerido' })
+    }
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { name: name.trim() },
+      { new: true }
+    )
+    res.json(user)
+  } catch {
+    res.status(500).json({ message: 'Error del servidor' })
+  }
+}
+
+const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Contraseña actual y nueva requeridas' })
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'La nueva contraseña debe tener al menos 6 caracteres' })
+    }
+    const user = await User.findById(req.user._id)
+    const valid = await user.comparePassword(currentPassword)
+    if (!valid) {
+      return res.status(400).json({ message: 'Contraseña actual incorrecta' })
+    }
+    user.password = newPassword
+    await user.save()
+    res.json({ message: 'Contraseña actualizada' })
+  } catch {
+    res.status(500).json({ message: 'Error del servidor' })
+  }
+}
+
 // Stateless logout: el cliente elimina los tokens en su lado
 const logout = (_req, res) => {
   res.json({ message: 'Sesión cerrada' })
 }
 
-module.exports = { login, refresh, logout }
+module.exports = { login, refresh, logout, changePassword, updateProfile }

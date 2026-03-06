@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { Info } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 
@@ -12,6 +13,19 @@ const CATEGORY_LABELS = {
   residuos: 'Residuos',
   viajes_negocio: 'Viajes de negocios',
   desplazamiento_empleados: 'Desplazamiento de empleados'
+}
+
+// Hints contextuales por tipo de actividad
+const ACTIVITY_HINTS = {
+  teletrabajo: 'Ingresa el consumo diario en kWh del total de teletrabajadores. Para el total anual multiplica por los días laborales del período.',
+  avion_domestico: 'Total anual de km recorridos (suma de todos los vuelos). Incluye ida y vuelta por cada viaje.',
+  avion_internacional: 'Total anual de km recorridos (suma de todos los vuelos). Incluye ida y vuelta por cada viaje.',
+  bus_interurbano: 'Total anual de km. Incluye ida y vuelta por cada viaje.',
+  tren: 'Total anual de km. Incluye ida y vuelta por cada viaje.',
+  taxi_auto: 'Total anual de km recorridos en taxi o auto de alquiler.',
+  auto_particular: 'Total anual de km de todos los empleados. Incluye ida y vuelta de cada jornada laboral.',
+  moto: 'Total anual de km de todos los empleados. Incluye ida y vuelta de cada jornada laboral.',
+  transporte_publico: 'Total anual de km de todos los empleados. Incluye ida y vuelta de cada jornada laboral.',
 }
 
 const EMPTY_FORM = { scope: 1, category: '', activityType: '', activityValue: '', description: '' }
@@ -41,6 +55,13 @@ export default function CalculationDetail() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [completing, setCompleting] = useState(false)
+  const [reopening, setReopening] = useState(false)
+  // Estado para edición inline de cantidad
+  const [editingId, setEditingId] = useState(null)
+  const [editingValue, setEditingValue] = useState('')
+  const [editingSaving, setEditingSaving] = useState(false)
+  const [notes, setNotes] = useState('')
+  const [notesSaving, setNotesSaving] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -49,34 +70,22 @@ export default function CalculationDetail() {
       api.get('/emission-factors')
     ]).then(([calcRes, entriesRes, factorsRes]) => {
       setCalc(calcRes.data)
+      setNotes(calcRes.data.notes || '')
       setEntries(entriesRes.data)
       setFactors(factorsRes.data)
     }).finally(() => setLoading(false))
   }, [id])
 
-  // Opciones de categoría según scope seleccionado
   const categoriesForScope = [...new Set(factors.filter(f => f.scope === Number(form.scope)).map(f => f.category))]
-
-  // Opciones de activityType según scope + category
-  const activityTypesForCategory = factors.filter(
-    f => f.scope === Number(form.scope) && f.category === form.category
-  )
-
-  // Factor seleccionado para preview
+  const activityTypesForCategory = factors.filter(f => f.scope === Number(form.scope) && f.category === form.category)
   const selectedFactor = activityTypesForCategory.find(f => f.activityType === form.activityType)
   const previewCo2e = selectedFactor && form.activityValue
     ? ((Number(form.activityValue) * selectedFactor.factor) / 1000).toFixed(4)
     : null
 
   const openModal = () => { setForm(EMPTY_FORM); setError(''); setModalOpen(true) }
-
-  const handleScopeChange = (scope) => {
-    setForm({ ...EMPTY_FORM, scope })
-  }
-
-  const handleCategoryChange = (category) => {
-    setForm(f => ({ ...f, category, activityType: '' }))
-  }
+  const handleScopeChange = (scope) => setForm({ ...EMPTY_FORM, scope })
+  const handleCategoryChange = (category) => setForm(f => ({ ...f, category, activityType: '' }))
 
   const handleSave = async (e) => {
     e.preventDefault()
@@ -109,7 +118,29 @@ export default function CalculationDetail() {
     } catch { /* silencioso */ }
   }
 
+  const startEdit = (entry) => {
+    setEditingId(entry._id)
+    setEditingValue(String(entry.activityValue))
+  }
+
+  const cancelEdit = () => { setEditingId(null); setEditingValue('') }
+
+  const handleSaveEdit = async (entryId) => {
+    if (!editingValue || Number(editingValue) < 0) return
+    setEditingSaving(true)
+    try {
+      const { data } = await api.patch(`/calculations/${id}/entries/${entryId}`, {
+        activityValue: Number(editingValue)
+      })
+      setEntries(prev => prev.map(e => e._id === data.entry._id ? data.entry : e))
+      setCalc(prev => ({ ...prev, totals: data.totals }))
+      cancelEdit()
+    } catch { /* silencioso */ }
+    finally { setEditingSaving(false) }
+  }
+
   const handleComplete = async () => {
+    if (!window.confirm('¿Marcar este cálculo como completado?')) return
     setCompleting(true)
     try {
       const { data } = await api.patch(`/calculations/${id}`, { status: 'completed' })
@@ -119,18 +150,38 @@ export default function CalculationDetail() {
     }
   }
 
+  const handleSaveNotes = async () => {
+    setNotesSaving(true)
+    try {
+      const { data } = await api.patch(`/calculations/${id}`, { notes })
+      setCalc(data)
+    } finally {
+      setNotesSaving(false)
+    }
+  }
+
+  const handleReopen = async () => {
+    setReopening(true)
+    try {
+      const { data } = await api.patch(`/calculations/${id}`, { status: 'draft' })
+      setCalc(data)
+    } finally {
+      setReopening(false)
+    }
+  }
+
   if (loading) return <div className="p-6 text-sm text-gray-400">Cargando...</div>
   if (!calc) return <div className="p-6 text-sm text-gray-500">Cálculo no encontrado.</div>
 
   const isDraft = calc.status === 'draft'
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
         <div>
           <button onClick={() => navigate(`${basePath}/calculations`)} className="text-xs text-gray-400 hover:text-gray-600 mb-2 block">
-            ← Mis cálculos
+            ← Cálculos
           </button>
           <h2 className="text-xl font-semibold text-gray-900">
             {calc.org?.name} — {calc.year}
@@ -142,25 +193,43 @@ export default function CalculationDetail() {
           </span>
         </div>
 
-        {isDraft && (
-          <div className="flex gap-2">
-            <button
-              onClick={openModal}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-            >
-              + Agregar entrada
-            </button>
-            {entries.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {isDraft ? (
+            <>
               <button
-                onClick={handleComplete}
-                disabled={completing}
-                className="border border-green-600 text-green-700 hover:bg-green-50 text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                onClick={openModal}
+                className="bg-[#0068ec] hover:bg-[#005acc] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
               >
-                {completing ? 'Guardando...' : 'Completar cálculo'}
+                + Agregar entrada
               </button>
-            )}
-          </div>
-        )}
+              {entries.length > 0 && (
+                <button
+                  onClick={handleComplete}
+                  disabled={completing}
+                  className="border border-green-600 text-green-700 hover:bg-green-50 text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {completing ? 'Guardando...' : 'Completar cálculo'}
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              <button
+                onClick={handleReopen}
+                disabled={reopening}
+                className="border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+              >
+                {reopening ? 'Reabriendo...' : 'Reabrir cálculo'}
+              </button>
+              <button
+                onClick={() => navigate(`${basePath}/calculations/${id}/results`)}
+                className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+              >
+                Ver resultados
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Resumen por alcance */}
@@ -173,6 +242,38 @@ export default function CalculationDetail() {
           <p className="text-2xl font-semibold text-white">{calc.totals.total.toFixed(3)}</p>
           <p className="text-xs text-gray-400">tCO₂e</p>
         </div>
+      </div>
+
+      {/* Notas */}
+      <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4">
+        <p className="text-xs font-medium text-gray-500 mb-2">Notas</p>
+        {isDraft ? (
+          <div className="flex flex-col gap-2">
+            <textarea
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              rows={3}
+              placeholder="Agrega contexto, supuestos o comentarios sobre este cálculo..."
+              className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleSaveNotes}
+                disabled={notesSaving || notes === (calc.notes || '')}
+                className="text-xs font-medium text-blue-600 hover:text-blue-800 disabled:opacity-40 transition-colors"
+              >
+                {notesSaving ? 'Guardando...' : 'Guardar notas'}
+              </button>
+              {notes !== (calc.notes || '') && (
+                <span className="text-xs text-gray-400">Cambios sin guardar</span>
+              )}
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-600 whitespace-pre-wrap">
+            {calc.notes || <span className="text-gray-400 italic">Sin notas.</span>}
+          </p>
+        )}
       </div>
 
       {/* Entradas agrupadas por alcance */}
@@ -194,39 +295,89 @@ export default function CalculationDetail() {
               <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
                 <h3 className="text-sm font-medium text-gray-700">{SCOPE_LABELS[scope]}</h3>
               </div>
+              <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-100">
                     {['Categoría', 'Actividad', 'Descripción', 'Cantidad', 'Factor', 'tCO₂e', isDraft ? '' : null]
-                      .filter(Boolean)
+                      .filter(h => h !== null)
                       .map(h => (
                         <th key={h} className="text-left px-4 py-2 text-xs font-medium text-gray-500">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {scopeEntries.map(entry => (
-                    <tr key={entry._id} className="hover:bg-gray-50">
-                      <td className="px-4 py-2.5 text-gray-600">{CATEGORY_LABELS[entry.category] || entry.category}</td>
-                      <td className="px-4 py-2.5 text-gray-900 font-medium">{entry.label}</td>
-                      <td className="px-4 py-2.5 text-gray-400">{entry.description || '—'}</td>
-                      <td className="px-4 py-2.5 text-gray-600">{entry.activityValue.toLocaleString('es-CL')} {entry.unit}</td>
-                      <td className="px-4 py-2.5 text-gray-400 text-xs">{entry.emissionFactor} kgCO₂e/{entry.unit}</td>
-                      <td className="px-4 py-2.5 font-semibold text-gray-900">{entry.co2e.toFixed(4)}</td>
-                      {isDraft && (
-                        <td className="px-4 py-2.5 text-right">
-                          <button
-                            onClick={() => handleDeleteEntry(entry._id)}
-                            className="text-xs text-red-400 hover:text-red-600"
-                          >
-                            Eliminar
-                          </button>
+                  {scopeEntries.map(entry => {
+                    const isEditing = editingId === entry._id
+                    const editedCo2e = isEditing && editingValue
+                      ? ((Number(editingValue) * entry.emissionFactor) / 1000).toFixed(4)
+                      : null
+                    return (
+                      <tr key={entry._id} className="hover:bg-gray-50">
+                        <td className="px-4 py-2.5 text-gray-600">{CATEGORY_LABELS[entry.category] || entry.category}</td>
+                        <td className="px-4 py-2.5 text-gray-900 font-medium">{entry.label}</td>
+                        <td className="px-4 py-2.5 text-gray-400">{entry.description || '—'}</td>
+                        <td className="px-4 py-2.5">
+                          {isEditing ? (
+                            <input
+                              type="number"
+                              min="0"
+                              step="any"
+                              autoFocus
+                              value={editingValue}
+                              onChange={e => setEditingValue(e.target.value)}
+                              className="w-28 border border-blue-400 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          ) : (
+                            <span className="text-gray-600">{entry.activityValue.toLocaleString('es-CL')} {entry.unit}</span>
+                          )}
                         </td>
-                      )}
-                    </tr>
-                  ))}
+                        <td className="px-4 py-2.5 text-gray-400 text-xs">{entry.emissionFactor} kgCO₂e/{entry.unit}</td>
+                        <td className="px-4 py-2.5 font-semibold text-gray-900">
+                          {isEditing && editedCo2e
+                            ? <span className="text-blue-600">{editedCo2e}</span>
+                            : entry.co2e.toFixed(4)
+                          }
+                        </td>
+                        {isDraft && (
+                          <td className="px-4 py-2.5 text-right">
+                            {isEditing ? (
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => handleSaveEdit(entry._id)}
+                                  disabled={editingSaving}
+                                  className="text-xs text-green-600 hover:text-green-800 font-medium disabled:opacity-50"
+                                >
+                                  {editingSaving ? '...' : 'Guardar'}
+                                </button>
+                                <button onClick={cancelEdit} className="text-xs text-gray-400 hover:text-gray-600">
+                                  Cancelar
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-end gap-3">
+                                <button
+                                  onClick={() => startEdit(entry)}
+                                  className="text-xs text-blue-500 hover:text-blue-700 font-medium"
+                                >
+                                  Editar
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteEntry(entry._id)}
+                                  className="text-xs text-red-400 hover:text-red-600"
+                                >
+                                  Eliminar
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                        )}
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
+              </div>
             </div>
           )
         })
@@ -235,7 +386,7 @@ export default function CalculationDetail() {
       {/* Modal agregar entrada */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
             <div className="px-6 py-5 border-b border-gray-100">
               <h3 className="text-base font-semibold text-gray-900">Agregar entrada</h3>
             </div>
@@ -252,7 +403,7 @@ export default function CalculationDetail() {
                       onClick={() => handleScopeChange(s)}
                       className={`flex-1 py-2 text-sm rounded-lg border font-medium transition-colors ${
                         Number(form.scope) === s
-                          ? 'bg-blue-600 text-white border-blue-600'
+                          ? 'bg-[#0068ec] text-white border-[#0068ec]'
                           : 'border-gray-300 text-gray-600 hover:bg-gray-50'
                       }`}
                     >
@@ -296,7 +447,7 @@ export default function CalculationDetail() {
                 </div>
               )}
 
-              {/* Cantidad */}
+              {/* Cantidad + hint contextual */}
               {form.activityType && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -312,6 +463,12 @@ export default function CalculationDetail() {
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="0"
                   />
+                  {ACTIVITY_HINTS[form.activityType] && (
+                    <p className="flex items-start gap-1.5 text-xs text-gray-400 mt-1 leading-relaxed">
+                      <Info className="w-3.5 h-3.5 mt-0.5 shrink-0 text-gray-400" />
+                      {ACTIVITY_HINTS[form.activityType]}
+                    </p>
+                  )}
                   {previewCo2e && (
                     <p className="text-xs text-blue-600 mt-1">
                       = <strong>{previewCo2e} tCO₂e</strong> · factor: {selectedFactor.factor} kgCO₂e/{selectedFactor.unit}
@@ -347,7 +504,7 @@ export default function CalculationDetail() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium py-2 rounded-lg transition-colors"
+                  className="flex-1 bg-[#0068ec] hover:bg-[#005acc] disabled:opacity-50 text-white text-sm font-medium py-2 rounded-lg transition-colors"
                 >
                   {saving ? 'Guardando...' : 'Agregar'}
                 </button>

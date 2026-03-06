@@ -60,7 +60,7 @@ export default function Organizations() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -69,7 +69,7 @@ export default function Organizations() {
         </div>
         <button
           onClick={openCreate}
-          className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          className="bg-[#0068ec] hover:bg-[#005acc] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
         >
           + Nueva organización
         </button>
@@ -87,6 +87,7 @@ export default function Organizations() {
         </div>
       ) : (
         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
@@ -123,6 +124,7 @@ export default function Organizations() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
@@ -143,7 +145,7 @@ export default function Organizations() {
                   required
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0068ec] focus:border-transparent"
                   placeholder="Acme S.A."
                 />
               </div>
@@ -154,7 +156,7 @@ export default function Organizations() {
                   <input
                     value={form.taxId}
                     onChange={(e) => setForm({ ...form, taxId: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0068ec] focus:border-transparent"
                     placeholder="76.123.456-7"
                   />
                 </div>
@@ -163,7 +165,7 @@ export default function Organizations() {
                   <input
                     value={form.country}
                     onChange={(e) => setForm({ ...form, country: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0068ec] focus:border-transparent"
                     placeholder="CL"
                   />
                 </div>
@@ -174,7 +176,7 @@ export default function Organizations() {
                 <input
                   value={form.industry}
                   onChange={(e) => setForm({ ...form, industry: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0068ec] focus:border-transparent"
                   placeholder="Manufactura, Retail, Minería..."
                 />
               </div>
@@ -211,7 +213,7 @@ export default function Organizations() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm font-medium py-2 rounded-lg transition-colors"
+                  className="flex-1 bg-[#0068ec] hover:bg-[#005acc] disabled:opacity-50 text-white text-sm font-medium py-2 rounded-lg transition-colors"
                 >
                   {saving ? 'Guardando...' : 'Guardar'}
                 </button>

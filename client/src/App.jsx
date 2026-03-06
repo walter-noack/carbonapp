@@ -10,6 +10,7 @@ import Users from './pages/admin/Users'
 import ConsultantHome from './pages/consultant/Home'
 import Calculations from './pages/consultant/Calculations'
 import CalculationDetail from './pages/consultant/CalculationDetail'
+import CalculationResults from './pages/consultant/CalculationResults'
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
             <Route path="users" element={<Users />} />
             <Route path="calculations" element={<Calculations />} />
             <Route path="calculations/:id" element={<CalculationDetail />} />
+            <Route path="calculations/:id/results" element={<CalculationResults />} />
           </Route>
 
           {/* Área consultant */}
@@ -46,6 +48,7 @@ export default function App() {
             <Route index element={<ConsultantHome />} />
             <Route path="calculations" element={<Calculations />} />
             <Route path="calculations/:id" element={<CalculationDetail />} />
+            <Route path="calculations/:id/results" element={<CalculationResults />} />
           </Route>
 
           <Route path="/unauthorized" element={

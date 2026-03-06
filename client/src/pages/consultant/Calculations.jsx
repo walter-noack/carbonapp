@@ -43,6 +43,14 @@ export default function Calculations() {
     setModalOpen(true)
   }
 
+  const handleReopen = async (e, calcId) => {
+    e.stopPropagation()
+    try {
+      const { data } = await api.patch(`/calculations/${calcId}`, { status: 'draft' })
+      setCalcs(prev => prev.map(c => c._id === data._id ? data : c))
+    } catch { /* silencioso */ }
+  }
+
   const handleCreate = async (e) => {
     e.preventDefault()
     if (isAdmin && !orgId) return setError('Selecciona una organización')
@@ -59,7 +67,7 @@ export default function Calculations() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Cálculos</h2>
@@ -67,7 +75,7 @@ export default function Calculations() {
         </div>
         <button
           onClick={openModal}
-          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          className="bg-[#0068ec] hover:bg-[#005acc] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
         >
           + Nuevo cálculo
         </button>
@@ -84,6 +92,7 @@ export default function Calculations() {
         </div>
       ) : (
         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
@@ -110,11 +119,37 @@ export default function Calculations() {
                       {STATUS_LABEL[c.status]}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right text-xs text-blue-600 font-medium">Ver →</td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex items-center justify-end gap-2" onClick={e => e.stopPropagation()}>
+                      {c.status === 'draft' ? (
+                        <button
+                          onClick={() => navigate(`${basePath}/calculations/${c._id}`)}
+                          className="text-xs font-medium px-2.5 py-1 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors whitespace-nowrap"
+                        >
+                          Completar
+                        </button>
+                      ) : (
+                        <button
+                          onClick={(e) => handleReopen(e, c._id)}
+                          className="text-xs font-medium px-2.5 py-1 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors whitespace-nowrap"
+                        >
+                          Reabrir
+                        </button>
+                      )}
+                      <button
+                        onClick={() => navigate(`${basePath}/calculations/${c._id}/results`)}
+                        disabled={c.status !== 'completed'}
+                        className="text-xs font-medium px-2.5 py-1 rounded-lg border border-green-200 text-green-700 hover:bg-green-50 transition-colors whitespace-nowrap disabled:opacity-30 disabled:cursor-not-allowed"
+                      >
+                        Ver resultados
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
@@ -164,7 +199,7 @@ export default function Calculations() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium py-2 rounded-lg transition-colors"
+                  className="flex-1 bg-[#0068ec] hover:bg-[#005acc] disabled:opacity-50 text-white text-sm font-medium py-2 rounded-lg transition-colors"
                 >
                   {saving ? 'Creando...' : 'Crear'}
                 </button>

@@ -16,6 +16,10 @@ const createEntry = async (req, res) => {
   try {
     const calc = await Calculation.findById(req.params.id)
     if (!calc) return res.status(404).json({ message: 'Cálculo no encontrado' })
+
+    if (req.user.role !== 'admin' && calc.org.toString() !== req.user.org?.toString()) {
+      return res.status(403).json({ message: 'Acceso denegado' })
+    }
     if (calc.status === 'completed') {
       return res.status(400).json({ message: 'No se pueden agregar entradas a un cálculo completado' })
     }
@@ -55,6 +59,10 @@ const updateEntry = async (req, res) => {
     const entry = await EmissionEntry.findById(req.params.entryId)
     if (!entry) return res.status(404).json({ message: 'Entrada no encontrada' })
 
+    if (req.user.role !== 'admin' && entry.org.toString() !== req.user.org?.toString()) {
+      return res.status(403).json({ message: 'Acceso denegado' })
+    }
+
     if (activityValue !== undefined) {
       entry.activityValue = activityValue
       entry.co2e = Math.round((activityValue * entry.emissionFactor / 1000) * 10000) / 10000
@@ -71,8 +79,13 @@ const updateEntry = async (req, res) => {
 
 const deleteEntry = async (req, res) => {
   try {
-    const entry = await EmissionEntry.findByIdAndDelete(req.params.entryId)
+    const entry = await EmissionEntry.findById(req.params.entryId)
     if (!entry) return res.status(404).json({ message: 'Entrada no encontrada' })
+
+    if (req.user.role !== 'admin' && entry.org.toString() !== req.user.org?.toString()) {
+      return res.status(403).json({ message: 'Acceso denegado' })
+    }
+    await entry.deleteOne()
 
     const totals = await recalculateTotals(entry.calculation)
     res.json({ message: 'Entrada eliminada', totals })
