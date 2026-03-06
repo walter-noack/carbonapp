@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Environment variables — NEVER commitear
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+
+# Vite cache
+client/.vite/
+
+# Serverless
+.serverless/
