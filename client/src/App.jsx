@@ -9,6 +9,7 @@ import Organizations from './pages/admin/Organizations'
 import Users from './pages/admin/Users'
 import ConsultantHome from './pages/consultant/Home'
 import Calculations from './pages/consultant/Calculations'
+import CalculationDetail from './pages/consultant/CalculationDetail'
 
 export default function App() {
   return (
@@ -29,6 +30,8 @@ export default function App() {
             <Route index element={<AdminDashboard />} />
             <Route path="organizations" element={<Organizations />} />
             <Route path="users" element={<Users />} />
+            <Route path="calculations" element={<Calculations />} />
+            <Route path="calculations/:id" element={<CalculationDetail />} />
           </Route>
 
           {/* Área consultant */}
@@ -42,6 +45,7 @@ export default function App() {
           >
             <Route index element={<ConsultantHome />} />
             <Route path="calculations" element={<Calculations />} />
+            <Route path="calculations/:id" element={<CalculationDetail />} />
           </Route>
 
           <Route path="/unauthorized" element={
