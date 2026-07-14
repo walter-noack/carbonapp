@@ -51,6 +51,8 @@
 - [x] Cat. 1 — Bienes y servicios comprados (simplificado)
   - Gasto total por categoría de compra, en millón CLP
   - Factor sectorial promedio por categoría (EEIO aproximado, 7 categorías — ver seed.js)
+- [x] Cat. 2 — Bienes de capital (simplificado, mismo patrón que Cat. 1: gasto en millón CLP × factor EEIO, 5 categorías)
+- [x] Cat. 3 — Upstream combustible y energía (factores WTT sobre el mismo consumo ya declarado en Scope 1/2: diesel, gasolina, gas natural, GLP, electricidad SEN)
 - [x] Cat. 4 — Transporte upstream
   - Toneladas-km por modo (camión/barco/avión) *(peso × distancia se ingresa ya multiplicado, no hay proveedores principales individuales)*
 - [x] Cat. 5 — Residuos (auto-importado desde Valorizapp, editable)
@@ -62,7 +64,7 @@
   - N° empleados por modo de transporte principal
   - Distancia promedio ida/vuelta diaria
   - Días trabajados en el período
-- [x] Pantalla "categorías no evaluadas": lista de Cat. 2, 3, 8–15 con opción de justificar por qué no aplica
+- [x] Pantalla "categorías no evaluadas": lista de Cat. 8–15 con opción de justificar por qué no aplica
 
 ---
 
@@ -153,9 +155,7 @@
 
 ## Backlog V2 (post-MVP)
 
-- [ ] Scope 3 Cat. 2 — Bienes de capital
-- [ ] Scope 3 Cat. 3 — Upstream combustible y energía
-- [ ] Scope 3 Cat. 8–15 — Cadena aguas abajo
+- [ ] Scope 3 Cat. 8–15 — Cadena aguas abajo (procesamiento/uso/fin de vida de productos, franquicias, inversiones — requieren perfiles por rubro, no factor genérico)
 - [ ] Actualización automática factor SEN vía scraping CNE
 - [ ] Plan Consultora: dashboard multi-empresa, white-label completo
 - [ ] Comparativo sectorial (benchmarking por rubro CIIU)

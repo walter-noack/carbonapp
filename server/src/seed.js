@@ -38,6 +38,24 @@ const EMISSION_FACTORS = [
   // Solo el factor más reciente disponible. Actualizar cuando MINENERGIA publique nuevo valor.
   { scope: 2, category: 'electricidad', activityType: 'sen', label: 'Electricidad SEN', unit: 'kWh', factor: 0.2584, year: 2023, source: 'Ministerio de Energía Chile 2023' },
 
+  // ── ALCANCE 3 · Cat 2 Bienes de capital (simplificado) ───────────────
+  // Mismo enfoque EEIO que Cat 1, aplicado a compras de activos fijos.
+  { scope: 3, category: 'bienes_capital', activityType: 'maquinaria_equipos',       label: 'Maquinaria y equipos',              unit: 'millón CLP', factor: 220, source: 'DEFRA 2023 EEIO (aprox.)' },
+  { scope: 3, category: 'bienes_capital', activityType: 'vehiculos',                label: 'Vehículos',                        unit: 'millón CLP', factor: 280, source: 'DEFRA 2023 EEIO (aprox.)' },
+  { scope: 3, category: 'bienes_capital', activityType: 'mobiliario',               label: 'Mobiliario y equipamiento oficina', unit: 'millón CLP', factor: 160, source: 'DEFRA 2023 EEIO (aprox.)' },
+  { scope: 3, category: 'bienes_capital', activityType: 'infraestructura_obras',    label: 'Infraestructura y obras civiles',   unit: 'millón CLP', factor: 380, source: 'DEFRA 2023 EEIO (aprox.)' },
+  { scope: 3, category: 'bienes_capital', activityType: 'hardware_tecnologia',      label: 'Hardware y equipamiento tecnológico', unit: 'millón CLP', factor: 190, source: 'DEFRA 2023 EEIO (aprox.)' },
+
+  // ── ALCANCE 3 · Cat 3 Actividades relacionadas con combustible y energía (upstream) ──
+  // Emisiones "well-to-tank": extracción, refinación y transporte del combustible/electricidad
+  // antes de su combustión o consumo (complementa lo ya declarado en Scope 1 y 2).
+  // Ingresar la misma cantidad consumida que en el formulario de Scope 1/2 correspondiente.
+  { scope: 3, category: 'upstream_combustible_energia', activityType: 'diesel',            label: 'Diesel — upstream (WTT)',            unit: 'L',   factor: 0.620, source: 'DEFRA 2023 WTT (aprox.)' },
+  { scope: 3, category: 'upstream_combustible_energia', activityType: 'gasolina',          label: 'Gasolina — upstream (WTT)',          unit: 'L',   factor: 0.540, source: 'DEFRA 2023 WTT (aprox.)' },
+  { scope: 3, category: 'upstream_combustible_energia', activityType: 'gas_natural',       label: 'Gas natural — upstream (WTT)',       unit: 'm3',  factor: 0.330, source: 'DEFRA 2023 WTT (aprox.)' },
+  { scope: 3, category: 'upstream_combustible_energia', activityType: 'glp',               label: 'GLP — upstream (WTT)',               unit: 'L',   factor: 0.330, source: 'DEFRA 2023 WTT (aprox.)' },
+  { scope: 3, category: 'upstream_combustible_energia', activityType: 'electricidad_sen',  label: 'Electricidad SEN — pérdidas T&D',    unit: 'kWh', factor: 0.021, source: 'DEFRA 2023 WTT (aprox.)' },
+
   // ── ALCANCE 3 · Cat 1 Bienes y servicios comprados (simplificado) ────
   // Factor EEIO aproximado por categoría de gasto, en kgCO2e por millón de CLP.
   // Orden de magnitud referencial — pendiente afinar con base sectorial chilena.

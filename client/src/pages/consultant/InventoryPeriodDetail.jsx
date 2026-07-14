@@ -11,7 +11,9 @@ const CATEGORY_LABELS = {
   fugitivas: 'Emisiones fugitivas',
   electricidad: 'Electricidad',
   bienes_servicios: 'Bienes y servicios comprados',
+  bienes_capital: 'Bienes de capital',
   transporte_upstream: 'Transporte y distribución upstream',
+  upstream_combustible_energia: 'Actividades de combustible y energía (upstream)',
   residuos: 'Residuos',
   viajes_negocio: 'Viajes de negocios',
   desplazamiento_empleados: 'Desplazamiento de empleados'
@@ -38,12 +40,16 @@ const ACTIVITY_HINTS = {
   alimentos_catering: 'Gasto total anual en la categoría, en millones de CLP (ej: 12.5 = $12.500.000).',
   construccion_materiales: 'Gasto total anual en la categoría, en millones de CLP (ej: 12.5 = $12.500.000).',
   otros_generales: 'Gasto total anual en la categoría, en millones de CLP (ej: 12.5 = $12.500.000).',
+  maquinaria_equipos: 'Gasto total anual en la categoría, en millones de CLP (ej: 12.5 = $12.500.000).',
+  vehiculos: 'Gasto total anual en la categoría, en millones de CLP (ej: 12.5 = $12.500.000).',
+  mobiliario: 'Gasto total anual en la categoría, en millones de CLP (ej: 12.5 = $12.500.000).',
+  infraestructura_obras: 'Gasto total anual en la categoría, en millones de CLP (ej: 12.5 = $12.500.000).',
+  hardware_tecnologia: 'Gasto total anual en la categoría, en millones de CLP (ej: 12.5 = $12.500.000).',
+  electricidad_sen: 'Usa la misma cantidad de kWh ya declarada en Alcance 2 — este factor cubre las pérdidas de transmisión y distribución, no el consumo directo.',
 }
 
 // Scope 3 categorías no evaluadas en este MVP (GHG Protocol completo tiene 15)
 const NON_EVALUATED_CATEGORIES = [
-  { code: 'cat_2', label: 'Cat. 2 — Bienes de capital' },
-  { code: 'cat_3', label: 'Cat. 3 — Actividades relacionadas con combustible y energía (upstream)' },
   { code: 'cat_8', label: 'Cat. 8 — Activos arrendados upstream' },
   { code: 'cat_9', label: 'Cat. 9 — Transporte y distribución downstream' },
   { code: 'cat_10', label: 'Cat. 10 — Procesamiento de productos vendidos' },
