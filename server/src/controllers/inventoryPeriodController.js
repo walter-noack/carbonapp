@@ -77,7 +77,7 @@ const updateInventoryPeriod = async (req, res) => {
       return res.status(403).json({ message: 'Acceso denegado' })
     }
 
-    const allowed = ['status', 'notes']
+    const allowed = ['status', 'notes', 'nonEvaluatedCategories']
     allowed.forEach((k) => { if (req.body[k] !== undefined) period[k] = req.body[k] })
     await period.save()
     res.json(period)

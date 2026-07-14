@@ -48,12 +48,11 @@
 - [x] UI: banner "Importar residuos desde Valorizapp" con conteo de importados/omitidos y badge en la tabla de fuentes
 
 ### Wizard Scope 3
-- [ ] Cat. 1 — Bienes y servicios comprados (simplificado)
-  - Gasto total por categoría de compra (CLP)
-  - Factor sectorial promedio por categoría
-- [ ] Cat. 4 — Transporte upstream
-  - Compras con flete incluido: peso × distancia estimada × modo (camión/barco/avión)
-  - Proveedores principales con distancia estimada
+- [x] Cat. 1 — Bienes y servicios comprados (simplificado)
+  - Gasto total por categoría de compra, en millón CLP
+  - Factor sectorial promedio por categoría (EEIO aproximado, 7 categorías — ver seed.js)
+- [x] Cat. 4 — Transporte upstream
+  - Toneladas-km por modo (camión/barco/avión) *(peso × distancia se ingresa ya multiplicado, no hay proveedores principales individuales)*
 - [x] Cat. 5 — Residuos (auto-importado desde Valorizapp, editable)
 - [x] Cat. 6 — Viajes de negocios
   - Viajes aéreos: origen/destino o km totales por clase
@@ -63,7 +62,7 @@
   - N° empleados por modo de transporte principal
   - Distancia promedio ida/vuelta diaria
   - Días trabajados en el período
-- [ ] Pantalla "categorías no evaluadas": lista de Cat. 2, 3, 8–15 con opción de justificar por qué no aplica
+- [x] Pantalla "categorías no evaluadas": lista de Cat. 2, 3, 8–15 con opción de justificar por qué no aplica
 
 ---
 

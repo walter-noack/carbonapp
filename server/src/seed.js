@@ -38,6 +38,23 @@ const EMISSION_FACTORS = [
   // Solo el factor más reciente disponible. Actualizar cuando MINENERGIA publique nuevo valor.
   { scope: 2, category: 'electricidad', activityType: 'sen', label: 'Electricidad SEN', unit: 'kWh', factor: 0.2584, year: 2023, source: 'Ministerio de Energía Chile 2023' },
 
+  // ── ALCANCE 3 · Cat 1 Bienes y servicios comprados (simplificado) ────
+  // Factor EEIO aproximado por categoría de gasto, en kgCO2e por millón de CLP.
+  // Orden de magnitud referencial — pendiente afinar con base sectorial chilena.
+  { scope: 3, category: 'bienes_servicios', activityType: 'servicios_profesionales', label: 'Servicios profesionales / consultoría', unit: 'millón CLP', factor: 80,  source: 'DEFRA 2023 EEIO (aprox.)' },
+  { scope: 3, category: 'bienes_servicios', activityType: 'ti_software',             label: 'TI, software y servicios cloud',        unit: 'millón CLP', factor: 60,  source: 'DEFRA 2023 EEIO (aprox.)' },
+  { scope: 3, category: 'bienes_servicios', activityType: 'marketing_publicidad',    label: 'Marketing y publicidad',                unit: 'millón CLP', factor: 100, source: 'DEFRA 2023 EEIO (aprox.)' },
+  { scope: 3, category: 'bienes_servicios', activityType: 'oficina_insumos',         label: 'Insumos de oficina',                    unit: 'millón CLP', factor: 150, source: 'DEFRA 2023 EEIO (aprox.)' },
+  { scope: 3, category: 'bienes_servicios', activityType: 'alimentos_catering',      label: 'Alimentos y catering',                  unit: 'millón CLP', factor: 250, source: 'DEFRA 2023 EEIO (aprox.)' },
+  { scope: 3, category: 'bienes_servicios', activityType: 'construccion_materiales', label: 'Materiales de construcción',            unit: 'millón CLP', factor: 450, source: 'DEFRA 2023 EEIO (aprox.)' },
+  { scope: 3, category: 'bienes_servicios', activityType: 'otros_generales',         label: 'Otros bienes y servicios generales',    unit: 'millón CLP', factor: 180, source: 'DEFRA 2023 EEIO (aprox.)' },
+
+  // ── ALCANCE 3 · Cat 4 Transporte y distribución upstream ─────────────
+  // Ingresar toneladas-kilómetro totales (peso en toneladas × distancia en km)
+  { scope: 3, category: 'transporte_upstream', activityType: 'camion',       label: 'Flete terrestre — camión (t·km)', unit: 't·km', factor: 0.107, source: 'DEFRA 2023' },
+  { scope: 3, category: 'transporte_upstream', activityType: 'barco',        label: 'Flete marítimo (t·km)',           unit: 't·km', factor: 0.012, source: 'DEFRA 2023' },
+  { scope: 3, category: 'transporte_upstream', activityType: 'avion_carga',  label: 'Flete aéreo (t·km)',              unit: 't·km', factor: 0.980, source: 'DEFRA 2023' },
+
   // ── ALCANCE 3 · Cat 5 Residuos ───────────────────────────────────────
   { scope: 3, category: 'residuos', activityType: 'residuos_solidos',   label: 'Residuos sólidos a relleno sanitario', unit: 'kg', factor: 0.960, source: 'IPCC 2006' },
   { scope: 3, category: 'residuos', activityType: 'residuos_organicos', label: 'Residuos orgánicos compostados',       unit: 'kg', factor: 0.010, source: 'IPCC 2006' },

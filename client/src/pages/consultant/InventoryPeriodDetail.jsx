@@ -10,6 +10,8 @@ const CATEGORY_LABELS = {
   combustion_movil: 'Combustión móvil',
   fugitivas: 'Emisiones fugitivas',
   electricidad: 'Electricidad',
+  bienes_servicios: 'Bienes y servicios comprados',
+  transporte_upstream: 'Transporte y distribución upstream',
   residuos: 'Residuos',
   viajes_negocio: 'Viajes de negocios',
   desplazamiento_empleados: 'Desplazamiento de empleados'
@@ -26,7 +28,31 @@ const ACTIVITY_HINTS = {
   auto_particular: 'Total anual de km de todos los empleados. Incluye ida y vuelta de cada jornada laboral.',
   moto: 'Total anual de km de todos los empleados. Incluye ida y vuelta de cada jornada laboral.',
   transporte_publico: 'Total anual de km de todos los empleados. Incluye ida y vuelta de cada jornada laboral.',
+  camion: 'Toneladas-kilómetro totales: peso transportado (t) × distancia recorrida (km). Suma todos los fletes del período.',
+  barco: 'Toneladas-kilómetro totales: peso transportado (t) × distancia recorrida (km). Suma todos los fletes del período.',
+  avion_carga: 'Toneladas-kilómetro totales: peso transportado (t) × distancia recorrida (km). Suma todos los fletes del período.',
+  servicios_profesionales: 'Gasto total anual en la categoría, en millones de CLP (ej: 12.5 = $12.500.000).',
+  ti_software: 'Gasto total anual en la categoría, en millones de CLP (ej: 12.5 = $12.500.000).',
+  marketing_publicidad: 'Gasto total anual en la categoría, en millones de CLP (ej: 12.5 = $12.500.000).',
+  oficina_insumos: 'Gasto total anual en la categoría, en millones de CLP (ej: 12.5 = $12.500.000).',
+  alimentos_catering: 'Gasto total anual en la categoría, en millones de CLP (ej: 12.5 = $12.500.000).',
+  construccion_materiales: 'Gasto total anual en la categoría, en millones de CLP (ej: 12.5 = $12.500.000).',
+  otros_generales: 'Gasto total anual en la categoría, en millones de CLP (ej: 12.5 = $12.500.000).',
 }
+
+// Scope 3 categorías no evaluadas en este MVP (GHG Protocol completo tiene 15)
+const NON_EVALUATED_CATEGORIES = [
+  { code: 'cat_2', label: 'Cat. 2 — Bienes de capital' },
+  { code: 'cat_3', label: 'Cat. 3 — Actividades relacionadas con combustible y energía (upstream)' },
+  { code: 'cat_8', label: 'Cat. 8 — Activos arrendados upstream' },
+  { code: 'cat_9', label: 'Cat. 9 — Transporte y distribución downstream' },
+  { code: 'cat_10', label: 'Cat. 10 — Procesamiento de productos vendidos' },
+  { code: 'cat_11', label: 'Cat. 11 — Uso de productos vendidos' },
+  { code: 'cat_12', label: 'Cat. 12 — Fin de vida de productos vendidos' },
+  { code: 'cat_13', label: 'Cat. 13 — Activos arrendados downstream' },
+  { code: 'cat_14', label: 'Cat. 14 — Franquicias' },
+  { code: 'cat_15', label: 'Cat. 15 — Inversiones' }
+]
 
 const EMPTY_FORM = { scope: 1, category: '', activityType: '', activityValue: '', description: '' }
 
@@ -65,6 +91,8 @@ export default function InventoryPeriodDetail() {
   const [importingValorizapp, setImportingValorizapp] = useState(false)
   const [valorizappResult, setValorizappResult] = useState(null)
   const [valorizappError, setValorizappError] = useState('')
+  const [justifications, setJustifications] = useState({})
+  const [justificationsSaving, setJustificationsSaving] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -74,6 +102,9 @@ export default function InventoryPeriodDetail() {
     ]).then(([calcRes, entriesRes, factorsRes]) => {
       setPeriod(calcRes.data)
       setNotes(calcRes.data.notes || '')
+      const map = {}
+      ;(calcRes.data.nonEvaluatedCategories || []).forEach(c => { map[c.category] = c.justification })
+      setJustifications(map)
       setSources(entriesRes.data)
       setFactors(factorsRes.data)
     }).finally(() => setLoading(false))
@@ -186,6 +217,19 @@ export default function InventoryPeriodDetail() {
       setValorizappError(err.response?.data?.message || 'No se pudo conectar con Valorizapp')
     } finally {
       setImportingValorizapp(false)
+    }
+  }
+
+  const handleSaveJustifications = async () => {
+    setJustificationsSaving(true)
+    try {
+      const nonEvaluatedCategories = NON_EVALUATED_CATEGORIES
+        .filter(c => (justifications[c.code] || '').trim())
+        .map(c => ({ category: c.code, justification: justifications[c.code].trim() }))
+      const { data } = await api.patch(`/inventory-periods/${id}`, { nonEvaluatedCategories })
+      setPeriod(data)
+    } finally {
+      setJustificationsSaving(false)
     }
   }
 
@@ -430,6 +474,46 @@ export default function InventoryPeriodDetail() {
           )
         })
       )}
+
+      {/* Categorías Scope 3 no evaluadas */}
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden mt-4">
+        <div className="px-5 py-4 border-b border-gray-100">
+          <h3 className="text-sm font-semibold text-gray-900">Categorías Scope 3 no evaluadas</h3>
+          <p className="text-xs text-gray-400 mt-0.5">
+            Este MVP no cubre estas categorías del GHG Protocol. Declara por qué no aplican o quedan fuera del alcance —
+            requerido para el expediente HuellaChile.
+          </p>
+        </div>
+        <div className="p-5 space-y-3">
+          {NON_EVALUATED_CATEGORIES.map(cat => (
+            <div key={cat.code}>
+              <label className="block text-xs font-medium text-gray-600 mb-1">{cat.label}</label>
+              {isDraft ? (
+                <textarea
+                  value={justifications[cat.code] || ''}
+                  onChange={e => setJustifications(prev => ({ ...prev, [cat.code]: e.target.value }))}
+                  rows={1}
+                  placeholder="Justificación (ej: no aplica al modelo de negocio, dato no disponible este período...)"
+                  className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-1.5 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              ) : (
+                <p className="text-sm text-gray-600">
+                  {justifications[cat.code] || <span className="text-gray-400 italic">Sin justificación registrada.</span>}
+                </p>
+              )}
+            </div>
+          ))}
+          {isDraft && (
+            <button
+              onClick={handleSaveJustifications}
+              disabled={justificationsSaving}
+              className="text-xs font-medium text-blue-600 hover:text-blue-800 disabled:opacity-40 transition-colors"
+            >
+              {justificationsSaving ? 'Guardando...' : 'Guardar justificaciones'}
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* Modal agregar entrada */}
       {modalOpen && (
