@@ -21,7 +21,7 @@ const createOrganization = async (req, res) => {
 
 const updateOrganization = async (req, res) => {
   try {
-    const allowed = ['name', 'taxId', 'industry', 'country', 'active']
+    const allowed = ['name', 'taxId', 'industry', 'country', 'active', 'plan', 'trial_ends_at']
     const updates = {}
     allowed.forEach((k) => {
       if (req.body[k] !== undefined) updates[k] = req.body[k]

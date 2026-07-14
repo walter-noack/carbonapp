@@ -6,7 +6,7 @@ const mongoose = require('mongoose')
 const authRoutes = require('./routes/auth')
 const userRoutes = require('./routes/users')
 const organizationRoutes = require('./routes/organizations')
-const calculationRoutes = require('./routes/calculations')
+const inventoryPeriodRoutes = require('./routes/inventoryPeriods')
 const emissionFactorRoutes = require('./routes/emissionFactors')
 
 const app = express()
@@ -17,7 +17,7 @@ app.use(express.json())
 app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/organizations', organizationRoutes)
-app.use('/api/calculations', calculationRoutes)
+app.use('/api/inventory-periods', inventoryPeriodRoutes)
 app.use('/api/emission-factors', emissionFactorRoutes)
 
 app.use((_req, res) => {

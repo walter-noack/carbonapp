@@ -12,13 +12,13 @@ const STATUS_STYLE = {
   completed: 'bg-green-100 text-green-700'
 }
 
-export default function Calculations() {
+export default function InventoryPeriods() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const isAdmin = user?.role === 'admin'
   const basePath = isAdmin ? '/admin' : '/dashboard'
 
-  const [calcs, setCalcs] = useState([])
+  const [periods, setPeriods] = useState([])
   const [orgs, setOrgs] = useState([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
@@ -28,10 +28,10 @@ export default function Calculations() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    const requests = [api.get('/calculations')]
+    const requests = [api.get('/inventory-periods')]
     if (isAdmin) requests.push(api.get('/organizations'))
     Promise.all(requests).then(([calcsRes, orgsRes]) => {
-      setCalcs(calcsRes.data)
+      setPeriods(calcsRes.data)
       if (orgsRes) setOrgs(orgsRes.data.filter(o => o.active))
     }).finally(() => setLoading(false))
   }, [isAdmin])
@@ -46,8 +46,8 @@ export default function Calculations() {
   const handleReopen = async (e, calcId) => {
     e.stopPropagation()
     try {
-      const { data } = await api.patch(`/calculations/${calcId}`, { status: 'draft' })
-      setCalcs(prev => prev.map(c => c._id === data._id ? data : c))
+      const { data } = await api.patch(`/inventory-periods/${calcId}`, { status: 'draft' })
+      setPeriods(prev => prev.map(c => c._id === data._id ? data : c))
     } catch { /* silencioso */ }
   }
 
@@ -58,8 +58,8 @@ export default function Calculations() {
     setError('')
     try {
       const payload = { year, ...(isAdmin && { org: orgId }) }
-      const { data } = await api.post('/calculations', payload)
-      navigate(`${basePath}/calculations/${data._id}`)
+      const { data } = await api.post('/inventory-periods', payload)
+      navigate(`${basePath}/periods/${data._id}`)
     } catch (err) {
       setError(err.response?.data?.message || 'Error al crear')
       setSaving(false)
@@ -83,7 +83,7 @@ export default function Calculations() {
 
       {loading ? (
         <p className="text-sm text-gray-400">Cargando...</p>
-      ) : calcs.length === 0 ? (
+      ) : periods.length === 0 ? (
         <div className="text-center py-16 text-gray-400">
           <p className="text-sm">Aún no hay cálculos.</p>
           <button onClick={openModal} className="text-sm text-blue-600 hover:underline mt-1">
@@ -102,10 +102,10 @@ export default function Calculations() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {calcs.map((c) => (
+              {periods.map((c) => (
                 <tr
                   key={c._id}
-                  onClick={() => navigate(`${basePath}/calculations/${c._id}`)}
+                  onClick={() => navigate(`${basePath}/periods/${c._id}`)}
                   className="hover:bg-gray-50 cursor-pointer transition-colors"
                 >
                   <td className="px-4 py-3 font-semibold text-gray-900">{c.year}</td>
@@ -123,7 +123,7 @@ export default function Calculations() {
                     <div className="flex items-center justify-end gap-2" onClick={e => e.stopPropagation()}>
                       {c.status === 'draft' ? (
                         <button
-                          onClick={() => navigate(`${basePath}/calculations/${c._id}`)}
+                          onClick={() => navigate(`${basePath}/periods/${c._id}`)}
                           className="text-xs font-medium px-2.5 py-1 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors whitespace-nowrap"
                         >
                           Completar
@@ -137,7 +137,7 @@ export default function Calculations() {
                         </button>
                       )}
                       <button
-                        onClick={() => navigate(`${basePath}/calculations/${c._id}/results`)}
+                        onClick={() => navigate(`${basePath}/periods/${c._id}/results`)}
                         disabled={c.status !== 'completed'}
                         className="text-xs font-medium px-2.5 py-1 rounded-lg border border-green-200 text-green-700 hover:bg-green-50 transition-colors whitespace-nowrap disabled:opacity-30 disabled:cursor-not-allowed"
                       >

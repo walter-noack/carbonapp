@@ -41,13 +41,13 @@ function ScopeCard({ scope, value }) {
   )
 }
 
-export default function CalculationDetail() {
+export default function InventoryPeriodDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
   const basePath = user?.role === 'admin' ? '/admin' : '/dashboard'
-  const [calc, setCalc] = useState(null)
-  const [entries, setEntries] = useState([])
+  const [period, setPeriod] = useState(null)
+  const [sources, setSources] = useState([])
   const [factors, setFactors] = useState([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
@@ -65,13 +65,13 @@ export default function CalculationDetail() {
 
   useEffect(() => {
     Promise.all([
-      api.get(`/calculations/${id}`),
-      api.get(`/calculations/${id}/entries`),
+      api.get(`/inventory-periods/${id}`),
+      api.get(`/inventory-periods/${id}/emission-sources`),
       api.get('/emission-factors')
     ]).then(([calcRes, entriesRes, factorsRes]) => {
-      setCalc(calcRes.data)
+      setPeriod(calcRes.data)
       setNotes(calcRes.data.notes || '')
-      setEntries(entriesRes.data)
+      setSources(entriesRes.data)
       setFactors(factorsRes.data)
     }).finally(() => setLoading(false))
   }, [id])
@@ -93,15 +93,15 @@ export default function CalculationDetail() {
     setSaving(true)
     setError('')
     try {
-      const { data } = await api.post(`/calculations/${id}/entries`, {
+      const { data } = await api.post(`/inventory-periods/${id}/emission-sources`, {
         scope: Number(form.scope),
         category: form.category,
         activityType: form.activityType,
         activityValue: Number(form.activityValue),
         description: form.description
       })
-      setEntries(prev => [...prev, data.entry])
-      setCalc(prev => ({ ...prev, totals: data.totals }))
+      setSources(prev => [...prev, data.source])
+      setPeriod(prev => ({ ...prev, totals: data.totals }))
       setModalOpen(false)
     } catch (err) {
       setError(err.response?.data?.message || 'Error al guardar')
@@ -110,11 +110,11 @@ export default function CalculationDetail() {
     }
   }
 
-  const handleDeleteEntry = async (entryId) => {
+  const handleDeleteEntry = async (sourceId) => {
     try {
-      const { data } = await api.delete(`/calculations/${id}/entries/${entryId}`)
-      setEntries(prev => prev.filter(e => e._id !== entryId))
-      setCalc(prev => ({ ...prev, totals: data.totals }))
+      const { data } = await api.delete(`/inventory-periods/${id}/emission-sources/${sourceId}`)
+      setSources(prev => prev.filter(e => e._id !== sourceId))
+      setPeriod(prev => ({ ...prev, totals: data.totals }))
     } catch { /* silencioso */ }
   }
 
@@ -125,15 +125,15 @@ export default function CalculationDetail() {
 
   const cancelEdit = () => { setEditingId(null); setEditingValue('') }
 
-  const handleSaveEdit = async (entryId) => {
+  const handleSaveEdit = async (sourceId) => {
     if (!editingValue || Number(editingValue) < 0) return
     setEditingSaving(true)
     try {
-      const { data } = await api.patch(`/calculations/${id}/entries/${entryId}`, {
+      const { data } = await api.patch(`/inventory-periods/${id}/emission-sources/${sourceId}`, {
         activityValue: Number(editingValue)
       })
-      setEntries(prev => prev.map(e => e._id === data.entry._id ? data.entry : e))
-      setCalc(prev => ({ ...prev, totals: data.totals }))
+      setSources(prev => prev.map(e => e._id === data.source._id ? data.source : e))
+      setPeriod(prev => ({ ...prev, totals: data.totals }))
       cancelEdit()
     } catch { /* silencioso */ }
     finally { setEditingSaving(false) }
@@ -143,8 +143,8 @@ export default function CalculationDetail() {
     if (!window.confirm('¿Marcar este cálculo como completado?')) return
     setCompleting(true)
     try {
-      const { data } = await api.patch(`/calculations/${id}`, { status: 'completed' })
-      setCalc(data)
+      const { data } = await api.patch(`/inventory-periods/${id}`, { status: 'completed' })
+      setPeriod(data)
     } finally {
       setCompleting(false)
     }
@@ -153,8 +153,8 @@ export default function CalculationDetail() {
   const handleSaveNotes = async () => {
     setNotesSaving(true)
     try {
-      const { data } = await api.patch(`/calculations/${id}`, { notes })
-      setCalc(data)
+      const { data } = await api.patch(`/inventory-periods/${id}`, { notes })
+      setPeriod(data)
     } finally {
       setNotesSaving(false)
     }
@@ -163,28 +163,28 @@ export default function CalculationDetail() {
   const handleReopen = async () => {
     setReopening(true)
     try {
-      const { data } = await api.patch(`/calculations/${id}`, { status: 'draft' })
-      setCalc(data)
+      const { data } = await api.patch(`/inventory-periods/${id}`, { status: 'draft' })
+      setPeriod(data)
     } finally {
       setReopening(false)
     }
   }
 
   if (loading) return <div className="p-6 text-sm text-gray-400">Cargando...</div>
-  if (!calc) return <div className="p-6 text-sm text-gray-500">Cálculo no encontrado.</div>
+  if (!period) return <div className="p-6 text-sm text-gray-500">Período no encontrado.</div>
 
-  const isDraft = calc.status === 'draft'
+  const isDraft = period.status === 'draft'
 
   return (
     <div className="p-4 sm:p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
         <div>
-          <button onClick={() => navigate(`${basePath}/calculations`)} className="text-xs text-gray-400 hover:text-gray-600 mb-2 block">
+          <button onClick={() => navigate(`${basePath}/periods`)} className="text-xs text-gray-400 hover:text-gray-600 mb-2 block">
             ← Cálculos
           </button>
           <h2 className="text-xl font-semibold text-gray-900">
-            {calc.org?.name} — {calc.year}
+            {period.org?.name} — {period.year}
           </h2>
           <span className={`inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${
             isDraft ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
@@ -202,7 +202,7 @@ export default function CalculationDetail() {
               >
                 + Agregar entrada
               </button>
-              {entries.length > 0 && (
+              {sources.length > 0 && (
                 <button
                   onClick={handleComplete}
                   disabled={completing}
@@ -222,7 +222,7 @@ export default function CalculationDetail() {
                 {reopening ? 'Reabriendo...' : 'Reabrir cálculo'}
               </button>
               <button
-                onClick={() => navigate(`${basePath}/calculations/${id}/results`)}
+                onClick={() => navigate(`${basePath}/periods/${id}/results`)}
                 className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
               >
                 Ver resultados
@@ -234,12 +234,12 @@ export default function CalculationDetail() {
 
       {/* Resumen por alcance */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        <ScopeCard scope={1} value={calc.totals.scope1} />
-        <ScopeCard scope={2} value={calc.totals.scope2} />
-        <ScopeCard scope={3} value={calc.totals.scope3} />
+        <ScopeCard scope={1} value={period.totals.scope1} />
+        <ScopeCard scope={2} value={period.totals.scope2} />
+        <ScopeCard scope={3} value={period.totals.scope3} />
         <div className="border border-gray-900 bg-gray-900 rounded-xl p-4">
           <p className="text-xs font-medium text-gray-400 mb-1">Total</p>
-          <p className="text-2xl font-semibold text-white">{calc.totals.total.toFixed(3)}</p>
+          <p className="text-2xl font-semibold text-white">{period.totals.total.toFixed(3)}</p>
           <p className="text-xs text-gray-400">tCO₂e</p>
         </div>
       </div>
@@ -259,25 +259,25 @@ export default function CalculationDetail() {
             <div className="flex items-center gap-3">
               <button
                 onClick={handleSaveNotes}
-                disabled={notesSaving || notes === (calc.notes || '')}
+                disabled={notesSaving || notes === (period.notes || '')}
                 className="text-xs font-medium text-blue-600 hover:text-blue-800 disabled:opacity-40 transition-colors"
               >
                 {notesSaving ? 'Guardando...' : 'Guardar notas'}
               </button>
-              {notes !== (calc.notes || '') && (
+              {notes !== (period.notes || '') && (
                 <span className="text-xs text-gray-400">Cambios sin guardar</span>
               )}
             </div>
           </div>
         ) : (
           <p className="text-sm text-gray-600 whitespace-pre-wrap">
-            {calc.notes || <span className="text-gray-400 italic">Sin notas.</span>}
+            {period.notes || <span className="text-gray-400 italic">Sin notas.</span>}
           </p>
         )}
       </div>
 
       {/* Entradas agrupadas por alcance */}
-      {entries.length === 0 ? (
+      {sources.length === 0 ? (
         <div className="text-center py-12 text-gray-400 bg-white border border-gray-200 rounded-xl">
           <p className="text-sm">No hay entradas aún.</p>
           {isDraft && (
@@ -288,7 +288,7 @@ export default function CalculationDetail() {
         </div>
       ) : (
         [1, 2, 3].map(scope => {
-          const scopeEntries = entries.filter(e => e.scope === scope)
+          const scopeEntries = sources.filter(e => e.scope === scope)
           if (scopeEntries.length === 0) return null
           return (
             <div key={scope} className="mb-4 bg-white border border-gray-200 rounded-xl overflow-hidden">

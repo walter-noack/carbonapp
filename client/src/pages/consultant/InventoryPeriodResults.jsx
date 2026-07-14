@@ -100,14 +100,14 @@ function CustomLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }) {
   )
 }
 
-export default function CalculationResults() {
+export default function InventoryPeriodResults() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
   const basePath = user?.role === 'admin' ? '/admin' : '/dashboard'
 
-  const [calc, setCalc] = useState(null)
-  const [entries, setEntries] = useState([])
+  const [period, setPeriod] = useState(null)
+  const [sources, setSources] = useState([])
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
   const [openScopes, setOpenScopes] = useState(new Set([1, 2, 3]))
@@ -116,27 +116,27 @@ export default function CalculationResults() {
 
   useEffect(() => {
     Promise.all([
-      api.get(`/calculations/${id}`),
-      api.get(`/calculations/${id}/entries`)
+      api.get(`/inventory-periods/${id}`),
+      api.get(`/inventory-periods/${id}/emission-sources`)
     ]).then(([calcRes, entriesRes]) => {
-      setCalc(calcRes.data)
-      setEntries(entriesRes.data)
+      setPeriod(calcRes.data)
+      setSources(entriesRes.data)
     }).finally(() => setLoading(false))
   }, [id])
 
   // Datos para gráfico de torta (distribución por alcance)
-  const scopePieData = calc ? [
-    { name: 'Alcance 1', value: calc.totals.scope1, color: SCOPE_COLORS[1] },
-    { name: 'Alcance 2', value: calc.totals.scope2, color: SCOPE_COLORS[2] },
-    { name: 'Alcance 3', value: calc.totals.scope3, color: SCOPE_COLORS[3] }
+  const scopePieData = period ? [
+    { name: 'Alcance 1', value: period.totals.scope1, color: SCOPE_COLORS[1] },
+    { name: 'Alcance 2', value: period.totals.scope2, color: SCOPE_COLORS[2] },
+    { name: 'Alcance 3', value: period.totals.scope3, color: SCOPE_COLORS[3] }
   ].filter(d => d.value > 0) : []
 
   // Datos para gráfico de barras (por categoría)
   const categoryMap = {}
-  entries.forEach(e => {
+  sources.forEach(e => {
     categoryMap[e.category] = (categoryMap[e.category] || 0) + e.co2e
   })
-  const categoryBarData = Object.entries(categoryMap)
+  const categoryBarData = Object.sources(categoryMap)
     .map(([cat, value]) => ({ name: CATEGORY_LABELS[cat] || cat, value: parseFloat(value.toFixed(4)), category: cat }))
     .sort((a, b) => b.value - a.value)
 
@@ -147,7 +147,7 @@ export default function CalculationResults() {
   const buildCsv = useCallback(() => {
     const rows = [
       ['Alcance', 'Categoría', 'Actividad', 'Descripción', 'Cantidad', 'Unidad', 'Factor (kgCO2e/u)', 'tCO2e'],
-      ...entries.map(e => [
+      ...sources.map(e => [
         `Alcance ${e.scope}`,
         CATEGORY_LABELS[e.category] || e.category,
         e.label,
@@ -159,7 +159,7 @@ export default function CalculationResults() {
       ])
     ]
     return rows.map(r => r.join('\t')).join('\n')
-  }, [entries])
+  }, [sources])
 
   const exportChartAsPng = useCallback((containerRef, filename) => {
     const svg = containerRef.current?.querySelector('svg')
@@ -197,32 +197,32 @@ export default function CalculationResults() {
   }
 
   if (loading) return <div className="p-6 text-sm text-gray-400">Cargando...</div>
-  if (!calc) return <div className="p-6 text-sm text-gray-500">Cálculo no encontrado.</div>
+  if (!period) return <div className="p-6 text-sm text-gray-500">Período no encontrado.</div>
 
   return (
     <div className="p-4 sm:p-6 max-w-5xl w-full">
       {/* Header */}
       <div className="mb-6">
         <button
-          onClick={() => navigate(`${basePath}/calculations/${id}`)}
+          onClick={() => navigate(`${basePath}/inventory-periods/${id}`)}
           className="text-xs text-gray-400 hover:text-gray-600 mb-2 block"
         >
           ← Volver al cálculo
         </button>
         <h2 className="text-xl font-semibold text-gray-900">
-          Resultados — {calc.org?.name} {calc.year}
+          Resultados — {period.org?.name} {period.year}
         </h2>
         <p className="text-sm text-gray-500 mt-0.5">Análisis de huella de carbono · GHG Protocol</p>
       </div>
 
       {/* Tarjetas resumen */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-        <StatCard label="Alcance 1" value={calc.totals.scope1} color="border-orange-200 bg-orange-50" />
-        <StatCard label="Alcance 2" value={calc.totals.scope2} color="border-yellow-200 bg-yellow-50" />
-        <StatCard label="Alcance 3" value={calc.totals.scope3} color="border-purple-200 bg-purple-50" />
+        <StatCard label="Alcance 1" value={period.totals.scope1} color="border-orange-200 bg-orange-50" />
+        <StatCard label="Alcance 2" value={period.totals.scope2} color="border-yellow-200 bg-yellow-50" />
+        <StatCard label="Alcance 3" value={period.totals.scope3} color="border-purple-200 bg-purple-50" />
         <div className="border border-gray-900 bg-gray-900 rounded-xl p-4">
           <p className="text-xs font-medium text-gray-400 mb-1">Total</p>
-          <p className="text-2xl font-semibold text-white">{calc.totals.total.toFixed(3)}</p>
+          <p className="text-2xl font-semibold text-white">{period.totals.total.toFixed(3)}</p>
           <p className="text-xs text-gray-400">tCO₂e</p>
         </div>
       </div>
@@ -234,7 +234,7 @@ export default function CalculationResults() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-gray-900">Distribución por alcance</h3>
             <button
-              onClick={() => exportChartAsPng(pieRef, `distribucion-alcances-${calc?.year}.png`)}
+              onClick={() => exportChartAsPng(pieRef, `distribucion-alcances-${period?.year}.png`)}
               className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors"
             >
               <Download className="w-3.5 h-3.5" />
@@ -281,7 +281,7 @@ export default function CalculationResults() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-gray-900">Emisiones por categoría (tCO₂e)</h3>
             <button
-              onClick={() => exportChartAsPng(barRef, `emisiones-categoria-${calc?.year}.png`)}
+              onClick={() => exportChartAsPng(barRef, `emisiones-categoria-${period?.year}.png`)}
               className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors"
             >
               <Download className="w-3.5 h-3.5" />
@@ -334,7 +334,7 @@ export default function CalculationResults() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {entries.map(e => (
+              {sources.map(e => (
                 <tr key={e._id} className="hover:bg-gray-50">
                   <td className="px-4 py-2.5 text-gray-500">Alcance {e.scope}</td>
                   <td className="px-4 py-2.5 text-gray-600">{CATEGORY_LABELS[e.category] || e.category}</td>
@@ -350,7 +350,7 @@ export default function CalculationResults() {
             <tfoot className="bg-gray-50 border-t border-gray-200">
               <tr>
                 <td colSpan={7} className="px-4 py-2.5 text-xs font-semibold text-gray-700">Total</td>
-                <td className="px-4 py-2.5 text-sm font-bold text-gray-900">{calc.totals.total.toFixed(4)}</td>
+                <td className="px-4 py-2.5 text-sm font-bold text-gray-900">{period.totals.total.toFixed(4)}</td>
               </tr>
             </tfoot>
           </table>

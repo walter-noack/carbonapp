@@ -1,8 +1,8 @@
 const mongoose = require('mongoose')
 
-const emissionEntrySchema = new mongoose.Schema(
+const emissionSourceSchema = new mongoose.Schema(
   {
-    calculation: { type: mongoose.Schema.Types.ObjectId, ref: 'Calculation', required: true },
+    inventoryPeriod: { type: mongoose.Schema.Types.ObjectId, ref: 'InventoryPeriod', required: true },
     org: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true },
     scope: { type: Number, enum: [1, 2, 3], required: true },
     category: { type: String, required: true },
@@ -12,10 +12,11 @@ const emissionEntrySchema = new mongoose.Schema(
     activityValue: { type: Number, required: true }, // cantidad de actividad
     unit: { type: String, required: true },
     emissionFactor: { type: Number, required: true }, // kgCO2e/unidad
+    gwp: { type: Number, default: 1 },                // potencial de calentamiento global aplicado
     factorSource: { type: String },
-    co2e: { type: Number, required: true }            // tCO2e = activityValue * emissionFactor / 1000
+    co2e: { type: Number, required: true }            // tCO2e = activityValue * emissionFactor * gwp / 1000
   },
   { timestamps: true }
 )
 
-module.exports = mongoose.model('EmissionEntry', emissionEntrySchema)
+module.exports = mongoose.model('EmissionSource', emissionSourceSchema)

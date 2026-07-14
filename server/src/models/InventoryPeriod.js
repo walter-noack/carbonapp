@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const calculationSchema = new mongoose.Schema(
+const inventoryPeriodSchema = new mongoose.Schema(
   {
     org: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true },
     year: { type: Number, required: true },
@@ -17,7 +17,7 @@ const calculationSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
-// Un solo cálculo por organización y año
-calculationSchema.index({ org: 1, year: 1 }, { unique: true })
+// Un solo período de reporte por organización y año
+inventoryPeriodSchema.index({ org: 1, year: 1 }, { unique: true })
 
-module.exports = mongoose.model('Calculation', calculationSchema)
+module.exports = mongoose.model('InventoryPeriod', inventoryPeriodSchema)

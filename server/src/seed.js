@@ -12,6 +12,7 @@ const ADMIN = {
 
 // Fuentes: IPCC 2006, Ministerio de Energía Chile 2023, DEFRA 2023
 // Distancias Alcance 3: ingresar km TOTALES ANUALES (incluir ida y vuelta si aplica)
+// emisiones_tCO2eq = cantidad × factor × gwp — gwp por defecto 1 (ya embebido en 'factor' para refrigerantes)
 const EMISSION_FACTORS = [
   // ── ALCANCE 1 · Combustión estacionaria ──────────────────────────────
   { scope: 1, category: 'combustion_estacionaria', activityType: 'diesel',      label: 'Diesel',         unit: 'L',   factor: 2.603, source: 'IPCC 2006' },

@@ -8,9 +8,9 @@ import AdminDashboard from './pages/admin/Dashboard'
 import Organizations from './pages/admin/Organizations'
 import Users from './pages/admin/Users'
 import ConsultantHome from './pages/consultant/Home'
-import Calculations from './pages/consultant/Calculations'
-import CalculationDetail from './pages/consultant/CalculationDetail'
-import CalculationResults from './pages/consultant/CalculationResults'
+import InventoryPeriods from './pages/consultant/InventoryPeriods'
+import InventoryPeriodDetail from './pages/consultant/InventoryPeriodDetail'
+import InventoryPeriodResults from './pages/consultant/InventoryPeriodResults'
 
 export default function App() {
   return (
@@ -31,9 +31,9 @@ export default function App() {
             <Route index element={<AdminDashboard />} />
             <Route path="organizations" element={<Organizations />} />
             <Route path="users" element={<Users />} />
-            <Route path="calculations" element={<Calculations />} />
-            <Route path="calculations/:id" element={<CalculationDetail />} />
-            <Route path="calculations/:id/results" element={<CalculationResults />} />
+            <Route path="periods" element={<InventoryPeriods />} />
+            <Route path="periods/:id" element={<InventoryPeriodDetail />} />
+            <Route path="periods/:id/results" element={<InventoryPeriodResults />} />
           </Route>
 
           {/* Área consultant */}
@@ -46,9 +46,9 @@ export default function App() {
             }
           >
             <Route index element={<ConsultantHome />} />
-            <Route path="calculations" element={<Calculations />} />
-            <Route path="calculations/:id" element={<CalculationDetail />} />
-            <Route path="calculations/:id/results" element={<CalculationResults />} />
+            <Route path="periods" element={<InventoryPeriods />} />
+            <Route path="periods/:id" element={<InventoryPeriodDetail />} />
+            <Route path="periods/:id/results" element={<InventoryPeriodResults />} />
           </Route>
 
           <Route path="/unauthorized" element={

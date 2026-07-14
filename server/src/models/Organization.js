@@ -22,6 +22,15 @@ const organizationSchema = new mongoose.Schema(
     active: {
       type: Boolean,
       default: true
+    },
+    plan: {
+      type: String,
+      enum: ['trial', 'reporte', 'huellachile_ready', 'consultora'],
+      default: 'trial'
+    },
+    trial_ends_at: {
+      type: Date,
+      default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
     }
   },
   { timestamps: true }

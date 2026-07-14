@@ -16,7 +16,7 @@ const navItems = [
     )
   },
   {
-    to: '/dashboard/calculations',
+    to: '/dashboard/periods',
     label: 'Mis cálculos',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">

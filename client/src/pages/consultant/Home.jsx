@@ -18,30 +18,30 @@ const SCOPE_COLORS = ['#3b82f6', '#22c55e', '#f59e0b']
 export default function Home() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const [calcs, setCalcs] = useState([])
+  const [periods, setPeriods] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.get('/calculations')
-      .then(res => setCalcs(res.data))
+    api.get('/inventory-periods')
+      .then(res => setPeriods(res.data))
       .finally(() => setLoading(false))
   }, [])
 
-  const total = calcs.length
-  const completed = calcs.filter(c => c.status === 'completed').length
-  const drafts = calcs.filter(c => c.status === 'draft').length
-  const totalCo2 = calcs.reduce((sum, c) => sum + (c.totals?.total || 0), 0)
+  const total = periods.length
+  const completed = periods.filter(c => c.status === 'completed').length
+  const drafts = periods.filter(c => c.status === 'draft').length
+  const totalCo2 = periods.reduce((sum, c) => sum + (c.totals?.total || 0), 0)
 
-  const recent = [...calcs].slice(0, 5)
+  const recent = [...periods].slice(0, 5)
 
-  // Trend: completed calcs sorted by year
-  const trendData = [...calcs]
+  // Trend: completed periods sorted by year
+  const trendData = [...periods]
     .filter(c => c.status === 'completed')
     .sort((a, b) => a.year - b.year)
     .map(c => ({ year: String(c.year), total: c.totals?.total || 0 }))
 
-  // Scope breakdown of latest completed calc
-  const latestCompleted = [...calcs]
+  // Scope breakdown of latest completed period
+  const latestCompleted = [...periods]
     .filter(c => c.status === 'completed')
     .sort((a, b) => b.year - a.year)[0]
 
@@ -62,7 +62,7 @@ export default function Home() {
         </div>
         {user?.org && (
           <button
-            onClick={() => navigate('/dashboard/calculations')}
+            onClick={() => navigate('/dashboard/periods')}
             className="bg-[#0068ec] hover:bg-[#005acc] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
           >
             + Nuevo cálculo
@@ -121,7 +121,7 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Scope breakdown of latest calc */}
+              {/* Scope breakdown of latest period */}
               {scopeData.length > 0 && (
                 <div className="bg-white border border-gray-200 rounded-xl p-5">
                   <div className="flex items-center justify-between mb-2">
@@ -171,18 +171,18 @@ export default function Home() {
             <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-gray-900">Cálculos recientes</h3>
               <button
-                onClick={() => navigate('/dashboard/calculations')}
+                onClick={() => navigate('/dashboard/periods')}
                 className="text-xs text-blue-600 hover:underline font-medium"
               >
                 Ver todos →
               </button>
             </div>
 
-            {calcs.length === 0 ? (
+            {periods.length === 0 ? (
               <div className="px-5 py-10 text-center">
                 <p className="text-sm text-gray-400 mb-3">Aún no hay cálculos registrados.</p>
                 <button
-                  onClick={() => navigate('/dashboard/calculations')}
+                  onClick={() => navigate('/dashboard/periods')}
                   className="bg-[#0068ec] hover:bg-[#005acc] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
                 >
                   Crear el primero
@@ -202,7 +202,7 @@ export default function Home() {
                   {recent.map(c => (
                     <tr
                       key={c._id}
-                      onClick={() => navigate(`/dashboard/calculations/${c._id}`)}
+                      onClick={() => navigate(`/dashboard/periods/${c._id}`)}
                       className="hover:bg-gray-50 cursor-pointer transition-colors"
                     >
                       <td className="px-4 py-2.5 font-semibold text-gray-900">{c.year}</td>
