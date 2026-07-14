@@ -11,6 +11,7 @@ const {
   updateEmissionSource,
   deleteEmissionSource
 } = require('../controllers/emissionSourceController')
+const { previewImport, importFromValorizapp } = require('../controllers/valorizappController')
 const { authenticate } = require('../middleware/auth')
 const { checkTrial } = require('../middleware/trial')
 
@@ -26,5 +27,9 @@ router.get('/:id/emission-sources', getEmissionSources)
 router.post('/:id/emission-sources', checkTrial, createEmissionSource)
 router.patch('/:id/emission-sources/:sourceId', checkTrial, updateEmissionSource)
 router.delete('/:id/emission-sources/:sourceId', checkTrial, deleteEmissionSource)
+
+// Integración Valorizapp — residuos auto-importados como Scope 3 Cat. 5
+router.get('/:id/valorizapp-preview', previewImport)
+router.post('/:id/import-valorizapp', checkTrial, importFromValorizapp)
 
 module.exports = router

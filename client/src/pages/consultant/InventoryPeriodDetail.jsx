@@ -62,6 +62,9 @@ export default function InventoryPeriodDetail() {
   const [editingSaving, setEditingSaving] = useState(false)
   const [notes, setNotes] = useState('')
   const [notesSaving, setNotesSaving] = useState(false)
+  const [importingValorizapp, setImportingValorizapp] = useState(false)
+  const [valorizappResult, setValorizappResult] = useState(null)
+  const [valorizappError, setValorizappError] = useState('')
 
   useEffect(() => {
     Promise.all([
@@ -170,6 +173,22 @@ export default function InventoryPeriodDetail() {
     }
   }
 
+  const handleImportValorizapp = async () => {
+    setImportingValorizapp(true)
+    setValorizappError('')
+    try {
+      const { data } = await api.post(`/inventory-periods/${id}/import-valorizapp`)
+      setValorizappResult(data)
+      const { data: freshSources } = await api.get(`/inventory-periods/${id}/emission-sources`)
+      setSources(freshSources)
+      setPeriod(prev => ({ ...prev, totals: data.totals }))
+    } catch (err) {
+      setValorizappError(err.response?.data?.message || 'No se pudo conectar con Valorizapp')
+    } finally {
+      setImportingValorizapp(false)
+    }
+  }
+
   if (loading) return <div className="p-6 text-sm text-gray-400">Cargando...</div>
   if (!period) return <div className="p-6 text-sm text-gray-500">Período no encontrado.</div>
 
@@ -244,6 +263,28 @@ export default function InventoryPeriodDetail() {
         </div>
       </div>
 
+      {/* Banner integración Valorizapp */}
+      {isDraft && (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-green-800">Importar residuos desde Valorizapp</p>
+            <p className="text-xs text-green-700 mt-0.5">
+              {valorizappResult
+                ? `${valorizappResult.imported.length} residuos importados como Alcance 3 · Cat. 5${valorizappResult.skipped.length > 0 ? ` (${valorizappResult.skipped.length} registros no convertibles omitidos)` : ''}.`
+                : 'Trae automáticamente los residuos declarados en Valorizapp para este año como fuentes de Alcance 3.'}
+            </p>
+            {valorizappError && <p className="text-xs text-red-600 mt-1">{valorizappError}</p>}
+          </div>
+          <button
+            onClick={handleImportValorizapp}
+            disabled={importingValorizapp}
+            className="shrink-0 bg-green-700 hover:bg-green-800 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
+          >
+            {importingValorizapp ? 'Importando...' : 'Importar desde Valorizapp'}
+          </button>
+        </div>
+      )}
+
       {/* Notas */}
       <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4">
         <p className="text-xs font-medium text-gray-500 mb-2">Notas</p>
@@ -316,7 +357,14 @@ export default function InventoryPeriodDetail() {
                       <tr key={entry._id} className="hover:bg-gray-50">
                         <td className="px-4 py-2.5 text-gray-600">{CATEGORY_LABELS[entry.category] || entry.category}</td>
                         <td className="px-4 py-2.5 text-gray-900 font-medium">{entry.label}</td>
-                        <td className="px-4 py-2.5 text-gray-400">{entry.description || '—'}</td>
+                        <td className="px-4 py-2.5 text-gray-400">
+                          {entry.importedFrom === 'valorizapp' && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 mr-1.5 rounded text-xs font-medium bg-green-100 text-green-700">
+                              Valorizapp
+                            </span>
+                          )}
+                          {entry.description || '—'}
+                        </td>
                         <td className="px-4 py-2.5">
                           {isEditing ? (
                             <input

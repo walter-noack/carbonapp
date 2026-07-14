@@ -14,7 +14,8 @@ const emissionSourceSchema = new mongoose.Schema(
     emissionFactor: { type: Number, required: true }, // kgCO2e/unidad
     gwp: { type: Number, default: 1 },                // potencial de calentamiento global aplicado
     factorSource: { type: String },
-    co2e: { type: Number, required: true }            // tCO2e = activityValue * emissionFactor * gwp / 1000
+    co2e: { type: Number, required: true },           // tCO2e = activityValue * emissionFactor * gwp / 1000
+    importedFrom: { type: String, enum: ['valorizapp', null], default: null }
   },
   { timestamps: true }
 )

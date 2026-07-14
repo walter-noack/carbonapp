@@ -42,10 +42,10 @@
 ## Sprint 2 — Scope 3 + integración Valorizapp (2 semanas)
 
 ### Integración Valorizapp
-- [ ] Endpoint interno GET `/api/valorizapp/residuos/:organizationId/:year` — leer datos de residuos del período
-- [ ] Mapper: tipo de residuo Valorizapp → factor IPCC Cat. 5
-- [ ] Auto-importación al iniciar wizard Scope 3: si hay datos de Valorizapp, pre-llenar Cat. 5
-- [ ] UI: mostrar banner "X residuos importados desde Valorizapp" con opción de editar
+- [x] Endpoint interno GET `/api/internal/waste-summary/:organizationId/:year` en valorizApp (API key compartida, no JWT de usuario) — leer datos de residuos del período
+- [x] Mapper: corriente Ley REP de Valorizapp → factor IPCC/DEFRA Cat. 5 (`server/src/services/valorizappMapper.js`, CarbonApp)
+- [x] Auto-importación: `POST /api/inventory-periods/:id/import-valorizapp` — trae y pre-llena Cat. 5, es idempotente (no duplica en reimportaciones)
+- [x] UI: banner "Importar residuos desde Valorizapp" con conteo de importados/omitidos y badge en la tabla de fuentes
 
 ### Wizard Scope 3
 - [ ] Cat. 1 — Bienes y servicios comprados (simplificado)
@@ -54,12 +54,12 @@
 - [ ] Cat. 4 — Transporte upstream
   - Compras con flete incluido: peso × distancia estimada × modo (camión/barco/avión)
   - Proveedores principales con distancia estimada
-- [ ] Cat. 5 — Residuos (auto-importado desde Valorizapp, editable)
-- [ ] Cat. 6 — Viajes de negocios
+- [x] Cat. 5 — Residuos (auto-importado desde Valorizapp, editable)
+- [x] Cat. 6 — Viajes de negocios
   - Viajes aéreos: origen/destino o km totales por clase
   - Viajes terrestres: km por modo (auto, bus, tren)
-  - Alojamiento: noches × factor hotel
-- [ ] Cat. 7 — Commuting empleados
+  - Alojamiento: noches × factor hotel *(no cubierto — solo aéreo/terrestre)*
+- [x] Cat. 7 — Commuting empleados
   - N° empleados por modo de transporte principal
   - Distancia promedio ida/vuelta diaria
   - Días trabajados en el período

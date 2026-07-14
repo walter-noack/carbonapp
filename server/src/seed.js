@@ -43,6 +43,14 @@ const EMISSION_FACTORS = [
   { scope: 3, category: 'residuos', activityType: 'residuos_organicos', label: 'Residuos orgánicos compostados',       unit: 'kg', factor: 0.010, source: 'IPCC 2006' },
   { scope: 3, category: 'residuos', activityType: 'aguas_residuales',   label: 'Aguas residuales tratadas',           unit: 'm3', factor: 0.340, source: 'IPCC 2006' },
 
+  // Corrientes Ley REP (valorización/reciclaje) — factores aproximados de reciclaje
+  // cerrado. Se auto-importan desde Valorizapp; pendiente afinar por MMA (ver context.md §13).
+  { scope: 3, category: 'residuos', activityType: 'rep_envases',    label: 'Envases y embalajes reciclados (Ley REP)', unit: 'kg', factor: 0.021, source: 'DEFRA 2023 (reciclaje aprox.)' },
+  { scope: 3, category: 'residuos', activityType: 'rep_neumaticos', label: 'Neumáticos valorizados (Ley REP)',         unit: 'kg', factor: 0.030, source: 'DEFRA 2023 (reciclaje aprox.)' },
+  { scope: 3, category: 'residuos', activityType: 'rep_aceites',    label: 'Aceites usados re-refinados (Ley REP)',    unit: 'kg', factor: 0.050, source: 'DEFRA 2023 (reciclaje aprox.)' },
+  { scope: 3, category: 'residuos', activityType: 'rep_raee',       label: 'RAEE (residuos eléctricos) reciclados (Ley REP)', unit: 'kg', factor: 0.0198, source: 'DEFRA 2023 (reciclaje aprox.)' },
+  { scope: 3, category: 'residuos', activityType: 'rep_pilas',      label: 'Pilas y baterías recicladas (Ley REP)',    unit: 'kg', factor: 0.150, source: 'DEFRA 2023 (reciclaje aprox.)' },
+
   // ── ALCANCE 3 · Cat 6 Viajes de negocios ─────────────────────────────
   // Ingresar km totales anuales (ida + vuelta si aplica)
   { scope: 3, category: 'viajes_negocio', activityType: 'avion_domestico',     label: 'Avión doméstico (km totales ida+vuelta)',     unit: 'km', factor: 0.2550, source: 'DEFRA 2023' },
