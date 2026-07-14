@@ -3,7 +3,8 @@ const {
   getInventoryPeriods,
   createInventoryPeriod,
   getInventoryPeriodById,
-  updateInventoryPeriod
+  updateInventoryPeriod,
+  getCalculationSnapshots
 } = require('../controllers/inventoryPeriodController')
 const {
   getEmissionSources,
@@ -21,6 +22,7 @@ router.get('/', getInventoryPeriods)
 router.post('/', checkTrial, createInventoryPeriod)
 router.get('/:id', getInventoryPeriodById)
 router.patch('/:id', checkTrial, updateInventoryPeriod)
+router.get('/:id/calculations', getCalculationSnapshots)
 
 // Fuentes de emisión anidadas bajo un período
 router.get('/:id/emission-sources', getEmissionSources)

@@ -1,5 +1,6 @@
 const InventoryPeriod = require('../models/InventoryPeriod')
 const EmissionSource = require('../models/EmissionSource')
+const EmissionCalculation = require('../models/EmissionCalculation')
 
 const recalculateTotals = async (inventoryPeriodId) => {
   const sources = await EmissionSource.find({ inventoryPeriod: inventoryPeriodId })
@@ -18,6 +19,28 @@ const recalculateTotals = async (inventoryPeriodId) => {
   }
   await InventoryPeriod.findByIdAndUpdate(inventoryPeriodId, { totals })
   return totals
+}
+
+// Congela un snapshot inmutable de totales + factores usados. Se crea uno
+// nuevo cada vez que el período se completa (no se edita uno existente),
+// para que reabrir/recompletar deje historial en vez de perder el anterior.
+const createCalculationSnapshot = async (period, userId) => {
+  const sources = await EmissionSource.find({ inventoryPeriod: period._id })
+  const factorsSnapshot = sources.map((s) => ({
+    emissionSource: s._id,
+    factor: s.emissionFactor,
+    gwp: s.gwp ?? 1,
+    source: s.factorSource,
+    year: s.createdAt.getFullYear()
+  }))
+
+  return EmissionCalculation.create({
+    inventoryPeriod: period._id,
+    org: period.org._id || period.org,
+    totals: period.totals,
+    factorsSnapshot,
+    generatedBy: userId
+  })
 }
 
 const getInventoryPeriods = async (req, res) => {
@@ -77,10 +100,35 @@ const updateInventoryPeriod = async (req, res) => {
       return res.status(403).json({ message: 'Acceso denegado' })
     }
 
+    const wasDraft = period.status === 'draft'
+
     const allowed = ['status', 'notes', 'nonEvaluatedCategories']
     allowed.forEach((k) => { if (req.body[k] !== undefined) period[k] = req.body[k] })
     await period.save()
+
+    if (wasDraft && period.status === 'completed') {
+      await createCalculationSnapshot(period, req.user._id)
+    }
+
     res.json(period)
+  } catch {
+    res.status(500).json({ message: 'Error del servidor' })
+  }
+}
+
+const getCalculationSnapshots = async (req, res) => {
+  try {
+    const period = await InventoryPeriod.findById(req.params.id)
+    if (!period) return res.status(404).json({ message: 'Período no encontrado' })
+
+    if (req.user.role !== 'admin' && period.org.toString() !== req.user.org?.toString()) {
+      return res.status(403).json({ message: 'Acceso denegado' })
+    }
+
+    const snapshots = await EmissionCalculation.find({ inventoryPeriod: period._id })
+      .populate('generatedBy', 'name')
+      .sort({ createdAt: -1 })
+    res.json(snapshots)
   } catch {
     res.status(500).json({ message: 'Error del servidor' })
   }
@@ -91,5 +139,6 @@ module.exports = {
   createInventoryPeriod,
   getInventoryPeriodById,
   updateInventoryPeriod,
+  getCalculationSnapshots,
   recalculateTotals
 }

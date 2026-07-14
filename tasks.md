@@ -76,7 +76,7 @@
   - Suma por categoría dentro de S3
   - Total general en tCO₂eq
   - Intensidades: tCO₂eq/empleado, tCO₂eq/millón CLP ingreso
-- [ ] Guardar resultado en colección `EmissionCalculation` con snapshot de factores usados
+- [x] Guardar resultado en colección `EmissionCalculation` con snapshot de factores usados — se crea automáticamente al completar un período (`createCalculationSnapshot`), cada re-completado genera un snapshot nuevo (historial, no sobrescribe). Endpoint `GET /api/inventory-periods/:id/calculations`.
 - [ ] Comparativo con período anterior (si existe `InventoryPeriod` previo)
 
 ### Dashboard
