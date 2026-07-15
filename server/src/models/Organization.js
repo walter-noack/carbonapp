@@ -31,7 +31,10 @@ const organizationSchema = new mongoose.Schema(
     trial_ends_at: {
       type: Date,
       default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-    }
+    },
+    // Denominadores para intensidades de carbono (tCO2eq/empleado, tCO2eq/millón CLP)
+    employeeCount: { type: Number, default: null },
+    annualRevenueMillionClp: { type: Number, default: null }
   },
   { timestamps: true }
 )

@@ -14,6 +14,10 @@ const CATEGORY_LABELS = {
   combustion_movil: 'Comb. móvil',
   fugitivas: 'Fugitivas',
   electricidad: 'Electricidad',
+  bienes_servicios: 'Bienes y servicios',
+  bienes_capital: 'Bienes de capital',
+  transporte_upstream: 'Transporte upstream',
+  upstream_combustible_energia: 'Combustible/energía upstream',
   residuos: 'Residuos',
   viajes_negocio: 'Viajes negocio',
   desplazamiento_empleados: 'Desplazamiento'
@@ -22,6 +26,7 @@ const CATEGORY_LABELS = {
 const CATEGORY_SCOPE = {
   combustion_estacionaria: 1, combustion_movil: 1, fugitivas: 1,
   electricidad: 2,
+  bienes_servicios: 3, bienes_capital: 3, transporte_upstream: 3, upstream_combustible_energia: 3,
   residuos: 3, viajes_negocio: 3, desplazamiento_empleados: 3,
 }
 
@@ -108,19 +113,23 @@ export default function InventoryPeriodResults() {
 
   const [period, setPeriod] = useState(null)
   const [sources, setSources] = useState([])
+  const [snapshot, setSnapshot] = useState(null)
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
   const [openScopes, setOpenScopes] = useState(new Set([1, 2, 3]))
+  const [exportError, setExportError] = useState('')
   const pieRef = useRef(null)
   const barRef = useRef(null)
 
   useEffect(() => {
     Promise.all([
       api.get(`/inventory-periods/${id}`),
-      api.get(`/inventory-periods/${id}/emission-sources`)
-    ]).then(([calcRes, entriesRes]) => {
+      api.get(`/inventory-periods/${id}/emission-sources`),
+      api.get(`/inventory-periods/${id}/calculations`)
+    ]).then(([calcRes, entriesRes, snapshotsRes]) => {
       setPeriod(calcRes.data)
       setSources(entriesRes.data)
+      setSnapshot(snapshotsRes.data[0] || null) // más reciente primero
     }).finally(() => setLoading(false))
   }, [id])
 
@@ -136,12 +145,33 @@ export default function InventoryPeriodResults() {
   sources.forEach(e => {
     categoryMap[e.category] = (categoryMap[e.category] || 0) + e.co2e
   })
-  const categoryBarData = Object.sources(categoryMap)
+  const categoryBarData = Object.entries(categoryMap)
     .map(([cat, value]) => ({ name: CATEGORY_LABELS[cat] || cat, value: parseFloat(value.toFixed(4)), category: cat }))
     .sort((a, b) => b.value - a.value)
 
   // Categorías ordenadas por emisión para recomendaciones
   const topCategories = categoryBarData.map(d => d.category)
+
+  // Top 5 fuentes individuales de emisión
+  const top5Sources = [...sources].sort((a, b) => b.co2e - a.co2e).slice(0, 5)
+
+  const nonEvaluatedCount = period?.nonEvaluatedCategories?.length || 0
+
+  const handleExport = async (kind) => {
+    setExportError('')
+    try {
+      const path = kind === 'pdf' ? 'pdf' : 'huellachile/pdf'
+      const res = await api.get(`/reports/${id}/${path}`, { responseType: 'blob' })
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }))
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${kind === 'pdf' ? 'reporte' : 'huellachile'}-${period?.org?.name}-${period?.year}.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      setExportError(err.response?.data?.message || 'No se pudo generar el documento')
+    }
+  }
 
   // Exportar CSV
   const buildCsv = useCallback(() => {
@@ -204,16 +234,36 @@ export default function InventoryPeriodResults() {
       {/* Header */}
       <div className="mb-6">
         <button
-          onClick={() => navigate(`${basePath}/inventory-periods/${id}`)}
+          onClick={() => navigate(`${basePath}/periods/${id}`)}
           className="text-xs text-gray-400 hover:text-gray-600 mb-2 block"
         >
           ← Volver al cálculo
         </button>
-        <h2 className="text-xl font-semibold text-gray-900">
-          Resultados — {period.org?.name} {period.year}
-        </h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-xl font-semibold text-gray-900">
+            Resultados — {period.org?.name} {period.year}
+          </h2>
+          {snapshot?.previousPeriodComparison?.previousYear && (
+            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+              snapshot.previousPeriodComparison.changePct > 0 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+            }`}>
+              {snapshot.previousPeriodComparison.changePct > 0 ? '+' : ''}
+              {snapshot.previousPeriodComparison.changePct}% vs {snapshot.previousPeriodComparison.previousYear}
+            </span>
+          )}
+        </div>
         <p className="text-sm text-gray-500 mt-0.5">Análisis de huella de carbono · GHG Protocol</p>
       </div>
+
+      {/* Alerta categorías Scope 3 no evaluadas */}
+      {nonEvaluatedCount > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-6 flex items-center gap-2">
+          <span className="text-amber-500">⚠</span>
+          <p className="text-sm text-amber-800">
+            Este inventario declara <strong>{nonEvaluatedCount}</strong> categoría{nonEvaluatedCount !== 1 ? 's' : ''} de Scope 3 como no evaluada{nonEvaluatedCount !== 1 ? 's' : ''}, con justificación registrada.
+          </p>
+        </div>
+      )}
 
       {/* Tarjetas resumen */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
@@ -226,6 +276,29 @@ export default function InventoryPeriodResults() {
           <p className="text-xs text-gray-400">tCO₂e</p>
         </div>
       </div>
+
+      {/* Intensidades de carbono */}
+      {snapshot && (snapshot.intensities?.perEmployee != null || snapshot.intensities?.perMillionClpRevenue != null) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+          {snapshot.intensities.perEmployee != null && (
+            <div className="border border-gray-200 bg-white rounded-xl p-4">
+              <p className="text-xs font-medium text-gray-500 mb-1">Intensidad por empleado</p>
+              <p className="text-xl font-semibold text-gray-900">{snapshot.intensities.perEmployee.toFixed(3)} <span className="text-xs font-normal text-gray-400">tCO₂e/empleado</span></p>
+            </div>
+          )}
+          {snapshot.intensities.perMillionClpRevenue != null && (
+            <div className="border border-gray-200 bg-white rounded-xl p-4">
+              <p className="text-xs font-medium text-gray-500 mb-1">Intensidad por ingreso</p>
+              <p className="text-xl font-semibold text-gray-900">{snapshot.intensities.perMillionClpRevenue.toFixed(4)} <span className="text-xs font-normal text-gray-400">tCO₂e/millón CLP</span></p>
+            </div>
+          )}
+        </div>
+      )}
+      {snapshot && snapshot.intensities?.perEmployee == null && snapshot.intensities?.perMillionClpRevenue == null && (
+        <p className="text-xs text-gray-400 mb-8">
+          Intensidades no disponibles — agrega N° de empleados e ingreso anual en los datos de la organización para calcularlas.
+        </p>
+      )}
 
       {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
@@ -307,6 +380,61 @@ export default function InventoryPeriodResults() {
             <p className="text-sm text-gray-400 text-center py-16">Sin datos</p>
           )}
         </div>
+      </div>
+
+      {/* Top 5 fuentes de emisión */}
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden mb-8">
+        <div className="px-5 py-4 border-b border-gray-100">
+          <h3 className="text-sm font-semibold text-gray-900">Top 5 fuentes de emisión</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 border-b border-gray-100">
+              <tr>
+                {['#', 'Alcance', 'Categoría', 'Actividad', 'tCO₂e'].map(h => (
+                  <th key={h} className="text-left px-4 py-2.5 text-xs font-medium text-gray-500">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {top5Sources.map((s, i) => (
+                <tr key={s._id} className="hover:bg-gray-50">
+                  <td className="px-4 py-2.5 text-gray-400">{i + 1}</td>
+                  <td className="px-4 py-2.5 text-gray-500">Alcance {s.scope}</td>
+                  <td className="px-4 py-2.5 text-gray-600">{CATEGORY_LABELS[s.category] || s.category}</td>
+                  <td className="px-4 py-2.5 text-gray-900 font-medium">{s.label}</td>
+                  <td className="px-4 py-2.5 font-semibold text-gray-900">{s.co2e.toFixed(4)}</td>
+                </tr>
+              ))}
+              {top5Sources.length === 0 && (
+                <tr><td colSpan={5} className="px-4 py-6 text-center text-gray-400">Sin fuentes registradas</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Exportación */}
+      <div className="bg-white border border-gray-200 rounded-xl p-5 mb-8">
+        <h3 className="text-sm font-semibold text-gray-900 mb-1">Exportar</h3>
+        <p className="text-xs text-gray-400 mb-3">Genera el reporte interno o el expediente para el programa HuellaChile del MMA.</p>
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={() => handleExport('pdf')}
+            className="flex items-center gap-1.5 bg-[#0068ec] hover:bg-[#005acc] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            Descargar PDF
+          </button>
+          <button
+            onClick={() => handleExport('huellachile')}
+            className="flex items-center gap-1.5 border border-green-600 text-green-700 hover:bg-green-50 text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            Expediente HuellaChile
+          </button>
+        </div>
+        {exportError && <p className="text-sm text-red-600 mt-2">{exportError}</p>}
       </div>
 
       {/* Tabla exportable */}

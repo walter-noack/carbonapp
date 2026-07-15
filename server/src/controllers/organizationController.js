@@ -11,8 +11,8 @@ const getOrganizations = async (_req, res) => {
 
 const createOrganization = async (req, res) => {
   try {
-    const { name, taxId, industry, country } = req.body
-    const org = await Organization.create({ name, taxId, industry, country })
+    const { name, taxId, industry, country, employeeCount, annualRevenueMillionClp } = req.body
+    const org = await Organization.create({ name, taxId, industry, country, employeeCount, annualRevenueMillionClp })
     res.status(201).json(org)
   } catch {
     res.status(500).json({ message: 'Error del servidor' })
@@ -21,7 +21,7 @@ const createOrganization = async (req, res) => {
 
 const updateOrganization = async (req, res) => {
   try {
-    const allowed = ['name', 'taxId', 'industry', 'country', 'active', 'plan', 'trial_ends_at']
+    const allowed = ['name', 'taxId', 'industry', 'country', 'active', 'plan', 'trial_ends_at', 'employeeCount', 'annualRevenueMillionClp']
     const updates = {}
     allowed.forEach((k) => {
       if (req.body[k] !== undefined) updates[k] = req.body[k]

@@ -71,24 +71,24 @@
 ## Sprint 3 — Motor de cálculo + dashboard (2 semanas)
 
 ### Motor de cálculo
-- [ ] Servicio `calculationEngine.js`:
+- [x] Servicio `calculationEngine.js`:
   - Suma emisiones por scope (S1, S2, S3)
   - Suma por categoría dentro de S3
   - Total general en tCO₂eq
-  - Intensidades: tCO₂eq/empleado, tCO₂eq/millón CLP ingreso
+  - Intensidades: tCO₂eq/empleado, tCO₂eq/millón CLP ingreso — requiere `Organization.employeeCount`/`annualRevenueMillionClp` (opcional, editable en admin)
 - [x] Guardar resultado en colección `EmissionCalculation` con snapshot de factores usados — se crea automáticamente al completar un período (`createCalculationSnapshot`), cada re-completado genera un snapshot nuevo (historial, no sobrescribe). Endpoint `GET /api/inventory-periods/:id/calculations`.
-- [ ] Comparativo con período anterior (si existe `InventoryPeriod` previo)
+- [x] Comparativo con período anterior (si existe `InventoryPeriod` previo) — se calcula al completar y queda en el snapshot (`previousPeriodComparison`)
 
 ### Dashboard
-- [ ] Tarjetas resumen: total tCO₂eq, Scope 1, Scope 2, Scope 3
-- [ ] Gráfico distribución por scope (pie o barras apiladas — Chart.js o Recharts)
-- [ ] Top 5 fuentes de emisión (tabla ordenada por tCO₂eq)
-- [ ] Intensidades de carbono
-- [ ] Comparativo año anterior (si hay histórico)
-- [ ] Alerta visual para categorías Scope 3 no evaluadas
-- [ ] Botones de exportación: "Descargar PDF" y "Expediente HuellaChile"
+- [x] Tarjetas resumen: total tCO₂eq, Scope 1, Scope 2, Scope 3
+- [x] Gráfico distribución por scope (pie o barras apiladas — Chart.js o Recharts)
+- [x] Top 5 fuentes de emisión (tabla ordenada por tCO₂eq)
+- [x] Intensidades de carbono
+- [x] Comparativo año anterior (si hay histórico) — badge junto al título de resultados
+- [x] Alerta visual para categorías Scope 3 no evaluadas
+- [x] Botones de exportación: "Descargar PDF" y "Expediente HuellaChile" *(UI lista, backend en Sprint 4)*
 
-### Integración Asistente IA
+### Integración Asistente IA — pendiente, el Asistente IA aún no está construido
 - [ ] Hook: al finalizar cálculo, inyectar contexto del inventario al Asistente IA
   - Total por scope, top 3 fuentes, categorías no evaluadas
   - El asistente puede responder: "¿qué significa que mi Scope 3 sea el 70%?"

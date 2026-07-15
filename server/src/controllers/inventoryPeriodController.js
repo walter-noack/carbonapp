@@ -1,22 +1,12 @@
 const InventoryPeriod = require('../models/InventoryPeriod')
 const EmissionSource = require('../models/EmissionSource')
 const EmissionCalculation = require('../models/EmissionCalculation')
+const Organization = require('../models/Organization')
+const { round, sumByScope, sumByCategory, computeIntensities } = require('../services/calculationEngine')
 
 const recalculateTotals = async (inventoryPeriodId) => {
   const sources = await EmissionSource.find({ inventoryPeriod: inventoryPeriodId })
-  const t = { scope1: 0, scope2: 0, scope3: 0 }
-  sources.forEach((s) => {
-    if (s.scope === 1) t.scope1 += s.co2e
-    else if (s.scope === 2) t.scope2 += s.co2e
-    else if (s.scope === 3) t.scope3 += s.co2e
-  })
-  const round = (n) => Math.round(n * 1000) / 1000
-  const totals = {
-    scope1: round(t.scope1),
-    scope2: round(t.scope2),
-    scope3: round(t.scope3),
-    total: round(t.scope1 + t.scope2 + t.scope3)
-  }
+  const totals = sumByScope(sources)
   await InventoryPeriod.findByIdAndUpdate(inventoryPeriodId, { totals })
   return totals
 }
@@ -25,7 +15,17 @@ const recalculateTotals = async (inventoryPeriodId) => {
 // nuevo cada vez que el período se completa (no se edita uno existente),
 // para que reabrir/recompletar deje historial en vez de perder el anterior.
 const createCalculationSnapshot = async (period, userId) => {
-  const sources = await EmissionSource.find({ inventoryPeriod: period._id })
+  const orgId = period.org._id || period.org
+  const [sources, org, previousPeriod] = await Promise.all([
+    EmissionSource.find({ inventoryPeriod: period._id }),
+    Organization.findById(orgId),
+    InventoryPeriod.findOne({ org: orgId, year: period.year - 1 })
+  ])
+
+  const totals = sumByScope(sources)
+  const categoryTotals = sumByCategory(sources)
+  const intensities = computeIntensities(totals, org)
+
   const factorsSnapshot = sources.map((s) => ({
     emissionSource: s._id,
     factor: s.emissionFactor,
@@ -34,10 +34,28 @@ const createCalculationSnapshot = async (period, userId) => {
     year: s.createdAt.getFullYear()
   }))
 
+  let previousPeriodComparison = { previousYear: null, previousTotal: null, changePct: null }
+  if (previousPeriod) {
+    // Preferir el último snapshot completado del período anterior; si no
+    // existe (nunca se completó), usar sus totales en vivo como referencia.
+    const previousSnapshot = await EmissionCalculation.findOne({ inventoryPeriod: previousPeriod._id }).sort({ createdAt: -1 })
+    const previousTotal = previousSnapshot ? previousSnapshot.totals.total : previousPeriod.totals.total
+    previousPeriodComparison = {
+      previousYear: previousPeriod.year,
+      previousTotal,
+      changePct: previousTotal > 0 ? round(((totals.total - previousTotal) / previousTotal) * 100) : null
+    }
+  }
+
   return EmissionCalculation.create({
     inventoryPeriod: period._id,
-    org: period.org._id || period.org,
-    totals: period.totals,
+    org: orgId,
+    totals,
+    categoryTotals,
+    intensities,
+    employeeCountAtSnapshot: org?.employeeCount ?? null,
+    annualRevenueMillionClpAtSnapshot: org?.annualRevenueMillionClp ?? null,
+    previousPeriodComparison,
     factorsSnapshot,
     generatedBy: userId
   })

@@ -12,6 +12,18 @@ const emissionCalculationSchema = new mongoose.Schema(
       scope3: { type: Number, default: 0 },
       total: { type: Number, default: 0 }
     },
+    categoryTotals: { type: mongoose.Schema.Types.Mixed, default: {} },
+    intensities: {
+      perEmployee: { type: Number, default: null },
+      perMillionClpRevenue: { type: Number, default: null }
+    },
+    employeeCountAtSnapshot: { type: Number, default: null },
+    annualRevenueMillionClpAtSnapshot: { type: Number, default: null },
+    previousPeriodComparison: {
+      previousYear: { type: Number, default: null },
+      previousTotal: { type: Number, default: null },
+      changePct: { type: Number, default: null } // (total - previousTotal) / previousTotal * 100
+    },
     factorsSnapshot: [
       {
         emissionSource: { type: mongoose.Schema.Types.ObjectId, ref: 'EmissionSource' },

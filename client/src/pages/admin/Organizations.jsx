@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import api from '../../api/axios'
 
-const EMPTY_FORM = { name: '', taxId: '', industry: '', country: 'CL', active: true }
+const EMPTY_FORM = { name: '', taxId: '', industry: '', country: 'CL', active: true, employeeCount: '', annualRevenueMillionClp: '' }
 
 export default function Organizations() {
   const [orgs, setOrgs] = useState([])
@@ -32,7 +32,15 @@ export default function Organizations() {
 
   const openEdit = (org) => {
     setEditing(org)
-    setForm({ name: org.name, taxId: org.taxId || '', industry: org.industry || '', country: org.country || 'CL', active: org.active })
+    setForm({
+      name: org.name,
+      taxId: org.taxId || '',
+      industry: org.industry || '',
+      country: org.country || 'CL',
+      active: org.active,
+      employeeCount: org.employeeCount ?? '',
+      annualRevenueMillionClp: org.annualRevenueMillionClp ?? ''
+    })
     setError('')
     setModalOpen(true)
   }
@@ -44,11 +52,16 @@ export default function Organizations() {
     setSaving(true)
     setError('')
     try {
+      const payload = {
+        ...form,
+        employeeCount: form.employeeCount === '' ? null : Number(form.employeeCount),
+        annualRevenueMillionClp: form.annualRevenueMillionClp === '' ? null : Number(form.annualRevenueMillionClp)
+      }
       if (editing) {
-        const { data } = await api.patch(`/organizations/${editing._id}`, form)
+        const { data } = await api.patch(`/organizations/${editing._id}`, payload)
         setOrgs((prev) => prev.map((o) => (o._id === data._id ? data : o)))
       } else {
-        const { data } = await api.post('/organizations', form)
+        const { data } = await api.post('/organizations', payload)
         setOrgs((prev) => [...prev, data])
       }
       closeModal()
@@ -180,6 +193,33 @@ export default function Organizations() {
                   placeholder="Manufactura, Retail, Minería..."
                 />
               </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">N° empleados</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.employeeCount}
+                    onChange={(e) => setForm({ ...form, employeeCount: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0068ec] focus:border-transparent"
+                    placeholder="50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Ingreso anual (millón CLP)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={form.annualRevenueMillionClp}
+                    onChange={(e) => setForm({ ...form, annualRevenueMillionClp: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0068ec] focus:border-transparent"
+                    placeholder="1200"
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-gray-400 -mt-2">Opcional — se usa para calcular las intensidades de carbono (tCO₂e/empleado, tCO₂e/millón CLP).</p>
 
               {editing && (
                 <div className="flex items-center gap-3">
