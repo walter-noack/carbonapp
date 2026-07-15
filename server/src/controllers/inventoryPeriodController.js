@@ -158,5 +158,6 @@ module.exports = {
   getInventoryPeriodById,
   updateInventoryPeriod,
   getCalculationSnapshots,
-  recalculateTotals
+  recalculateTotals,
+  createCalculationSnapshot
 }
