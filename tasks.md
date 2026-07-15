@@ -98,27 +98,27 @@
 ## Sprint 4 — Outputs: PDF + HuellaChile (2 semanas)
 
 ### Reporte PDF interno
-- [ ] Setup Puppeteer (o evaluar React-PDF) en el backend
-- [ ] Template HTML del reporte:
-  - Portada: logo empresa (white-label), nombre organización, período, fecha generación
-  - Resumen ejecutivo: 1 página con totales por scope y gráfico
+- [x] Setup Puppeteer en el backend (`server/src/services/reportService.js`, `renderPdf`)
+- [x] Template HTML del reporte:
+  - Portada: nombre organización, período, fecha generación *(logo white-label queda pendiente — no hay feature de upload de logo aún)*
+  - Resumen ejecutivo: 1 página con totales por scope y gráfico de barras CSS
   - Inventario detallado: tabla por fuente (nombre, scope, categoría, dato actividad, factor, tCO₂eq)
-  - Tabla de factores de emisión utilizados: factor, valor, unidad, fuente, año
+  - Tabla de factores de emisión utilizados: factor, valor, unidad, fuente, año (año extraído del texto de la fuente, ej. "IPCC 2006")
   - Declaración de categorías no evaluadas con justificación ingresada por el usuario
   - Top 3 recomendaciones automáticas según perfil de emisiones (reglas por scope dominante)
-- [ ] Endpoint GET `/api/reports/:inventoryPeriodId/pdf` — generar y retornar PDF
+- [x] Endpoint GET `/api/reports/:inventoryPeriodId/pdf` — genera y retorna PDF (requiere período `completed`, bloqueado por `checkTrial`)
 
 ### Expediente HuellaChile
-- [ ] Mapear campos del inventario al formato oficial MMA:
-  - Formulario de inventario (campos específicos del programa HuellaChile)
-  - Tabla de datos de actividad por categoría con unidades requeridas por MMA
-  - Tabla de factores con referencias bibliográficas en formato APA
-  - Declaración de límites organizacionales (enfoque control operacional/financiero)
-  - Declaración de límites operacionales (qué scopes se incluyen y cuáles no)
-- [ ] Checklist de documentación complementaria (lista de documentos que pide el MMA)
-- [ ] Exportación PDF formato MMA
-- [ ] Exportación Excel con tablas para subir al portal HuellaChile
-- [ ] Endpoints:
+- [x] Mapear campos del inventario al formato oficial MMA:
+  - Formulario de inventario (razón social, RUT, rubro, período, totales por alcance)
+  - Tabla de datos de actividad por categoría con unidades
+  - Tabla de factores con referencias bibliográficas en formato APA (aproximado, pendiente validar formato exacto con MMA)
+  - Declaración de límites organizacionales (enfoque control operacional, texto fijo)
+  - Declaración de límites operacionales (scopes y categorías incluidas/no evaluadas)
+- [x] Checklist de documentación complementaria (lista estática de documentos típicos del programa)
+- [x] Exportación PDF formato MMA
+- [x] Exportación Excel con tablas para subir al portal HuellaChile (4 hojas: resumen, datos de actividad, factores, no evaluadas)
+- [x] Endpoints:
   - GET `/api/reports/:inventoryPeriodId/huellachile/pdf`
   - GET `/api/reports/:inventoryPeriodId/huellachile/xlsx`
 

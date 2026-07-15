@@ -8,6 +8,7 @@ const userRoutes = require('./routes/users')
 const organizationRoutes = require('./routes/organizations')
 const inventoryPeriodRoutes = require('./routes/inventoryPeriods')
 const emissionFactorRoutes = require('./routes/emissionFactors')
+const reportRoutes = require('./routes/reports')
 
 const app = express()
 
@@ -19,6 +20,7 @@ app.use('/api/users', userRoutes)
 app.use('/api/organizations', organizationRoutes)
 app.use('/api/inventory-periods', inventoryPeriodRoutes)
 app.use('/api/emission-factors', emissionFactorRoutes)
+app.use('/api/reports', reportRoutes)
 
 app.use((_req, res) => {
   res.status(404).json({ message: 'Ruta no encontrada' })
