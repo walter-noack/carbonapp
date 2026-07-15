@@ -3,6 +3,8 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import ProfilePanel from './ProfilePanel'
+import logoWhite from '../assets/logo-white.png'
+import logoColor from '../assets/logo-color.png'
 
 const navItems = [
   {
@@ -51,7 +53,7 @@ export default function ConsultantLayout() {
         {/* Logo */}
         <div className="px-5 py-5 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
           <div className="flex items-center gap-2">
-            <span className="text-base font-semibold text-white">CarbonApp</span>
+            <img src={logoWhite} alt="CarbonApp" className="h-6" />
             <span className="text-xs px-1.5 py-0.5 rounded font-medium" style={{ backgroundColor: 'rgba(115,201,27,0.2)', color: '#73c91b' }}>
               consultant
             </span>
@@ -114,7 +116,7 @@ export default function ConsultantLayout() {
           <button onClick={() => setSidebarOpen(true)} className="text-gray-500 hover:text-gray-700">
             <Menu className="w-5 h-5" />
           </button>
-          <span className="text-base font-semibold" style={{ color: '#005429' }}>CarbonApp</span>
+          <img src={logoColor} alt="CarbonApp" className="h-6" />
         </div>
 
         <main className="flex-1 overflow-y-auto">

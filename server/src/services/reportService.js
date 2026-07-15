@@ -1,4 +1,18 @@
 const puppeteer = require('puppeteer')
+const fs = require('fs')
+const path = require('path')
+
+// Logo por defecto (a color, para fondos claros como la portada del PDF).
+// Repo root: server/src/services/../../../logo/logocarbonappSFondo.png
+const LOGO_DATA_URI = (() => {
+  try {
+    const logoPath = path.join(__dirname, '../../../logo/logocarbonappSFondo.png')
+    const base64 = fs.readFileSync(logoPath).toString('base64')
+    return `data:image/png;base64,${base64}`
+  } catch {
+    return null
+  }
+})()
 
 const SCOPE_LABELS = { 1: 'Alcance 1 — Emisiones directas', 2: 'Alcance 2 — Electricidad comprada', 3: 'Alcance 3 — Emisiones indirectas' }
 const CATEGORY_LABELS = {
@@ -147,7 +161,7 @@ const buildInternalReportHtml = ({ org, period, sources, nonEvaluatedCategories 
 
   return `<!doctype html><html><head><meta charset="utf-8">${baseStyles}</head><body>
     <div class="page cover">
-      <div class="brand">CARBONAPP · AMBIENTAPP</div>
+      ${LOGO_DATA_URI ? `<img src="${LOGO_DATA_URI}" alt="CarbonApp" style="height:64px; margin-bottom:32px;" />` : '<div class="brand">CARBONAPP · AMBIENTAPP</div>'}
       <h1>Reporte de Huella de Carbono</h1>
       <p style="font-size:16px; color:#374151;">${esc(org.name)}</p>
       <p style="color:#6b7280;">Período ${period.year} · GHG Protocol (Scope 1, 2 y 3)</p>
@@ -216,6 +230,7 @@ const buildHuellaChileHtml = ({ org, period, sources, nonEvaluatedCategories }) 
 
   return `<!doctype html><html><head><meta charset="utf-8">${baseStyles}</head><body>
     <div class="page">
+      ${LOGO_DATA_URI ? `<img src="${LOGO_DATA_URI}" alt="CarbonApp" style="height:36px; margin-bottom:16px;" />` : ''}
       <h1>Expediente HuellaChile</h1>
       <p style="color:#6b7280;">Programa HuellaChile — Ministerio del Medio Ambiente de Chile</p>
 

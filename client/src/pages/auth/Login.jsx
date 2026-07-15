@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import logoWhite from '../../assets/logo-white.png'
 
 export default function Login() {
   const { login } = useAuth()
@@ -28,14 +29,7 @@ export default function Login() {
       <div className="w-full max-w-sm">
         {/* Brand header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#73c91b' }}>
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
-              </svg>
-            </div>
-            <h1 className="text-2xl font-bold text-white">CarbonApp</h1>
-          </div>
+          <img src={logoWhite} alt="CarbonApp" className="h-14 mx-auto mb-3" />
           <p className="text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>Plataforma de huella de carbono corporativa</p>
         </div>
 
