@@ -1,41 +1,37 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import api from '../api/axios'
+import api, { AMBIENTAPP_LOGIN_URL } from '../api/axios'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [needsOnboarding, setNeedsOnboarding] = useState(false)
 
   useEffect(() => {
-    const stored = localStorage.getItem('user')
-    if (stored) setUser(JSON.parse(stored))
-    setLoading(false)
+    api
+      .get('/auth/me')
+      .then((res) => setUser(res.data))
+      .catch((err) => {
+        if (err.response?.data?.message === 'onboarding_required') {
+          setNeedsOnboarding(true)
+        }
+      })
+      .finally(() => setLoading(false))
   }, [])
 
-  const login = async (email, password) => {
-    const { data } = await api.post('/auth/login', { email, password })
-    localStorage.setItem('token', data.accessToken)
-    localStorage.setItem('refreshToken', data.refreshToken)
-    localStorage.setItem('user', JSON.stringify(data.user))
-    setUser(data.user)
-    return data.user
-  }
-
   const updateUser = (updatedUser) => {
-    const merged = { ...user, ...updatedUser }
-    localStorage.setItem('user', JSON.stringify(merged))
-    setUser(merged)
+    setUser((prev) => ({ ...prev, ...updatedUser }))
   }
 
   const logout = async () => {
     try { await api.post('/auth/logout') } catch { /* ignorar */ }
-    localStorage.clear()
     setUser(null)
+    window.location.href = AMBIENTAPP_LOGIN_URL
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, needsOnboarding, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   )

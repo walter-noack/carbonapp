@@ -1,9 +1,11 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { AMBIENTAPP_LOGIN_URL } from './api/axios'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminLayout from './components/AdminLayout'
 import ConsultantLayout from './components/ConsultantLayout'
-import Login from './pages/auth/Login'
+import Onboarding from './pages/Onboarding'
 import AdminDashboard from './pages/admin/Dashboard'
 import Organizations from './pages/admin/Organizations'
 import Users from './pages/admin/Users'
@@ -12,12 +14,24 @@ import InventoryPeriods from './pages/consultant/InventoryPeriods'
 import InventoryPeriodDetail from './pages/consultant/InventoryPeriodDetail'
 import InventoryPeriodResults from './pages/consultant/InventoryPeriodResults'
 
+function RedirectToHubLogin() {
+  useEffect(() => {
+    window.location.href = AMBIENTAPP_LOGIN_URL
+  }, [])
+  return null
+}
+
 export default function App() {
   return (
-    <BrowserRouter>
+    // HashRouter: Banahosting (mismo hosting que Valorizapp) suele ignorar el
+    // .htaccess de estos subdominios (AllowOverride deshabilitado), lo que
+    // rompe rutas como /admin o /dashboard al recargar. Con hash (/#/admin)
+    // el navegador nunca le pide nada al servidor más allá de index.html.
+    <HashRouter>
       <AuthProvider>
         <Routes>
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<RedirectToHubLogin />} />
+          <Route path="/onboarding" element={<Onboarding />} />
 
           {/* Área admin */}
           <Route
@@ -57,9 +71,9 @@ export default function App() {
             </div>
           } />
 
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </AuthProvider>
-    </BrowserRouter>
+    </HashRouter>
   )
 }

@@ -1,30 +1,19 @@
 import axios from 'axios'
 
-const api = axios.create({ baseURL: '/api' })
+export const AMBIENTAPP_LOGIN_URL = 'https://ambientapp.cl/login'
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token')
-  if (token) config.headers.Authorization = `Bearer ${token}`
-  return config
+// Sin token propio: la sesión viaja en la cookie ambient_token compartida
+// con AmbientApp (withCredentials la adjunta en cada request cross-origin).
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || '/api',
+  withCredentials: true
 })
 
 api.interceptors.response.use(
   (res) => res,
-  async (error) => {
-    const original = error.config
-    if (error.response?.status === 401 && !original._retry) {
-      original._retry = true
-      try {
-        const refreshToken = localStorage.getItem('refreshToken')
-        const { data } = await axios.post('/api/auth/refresh', { refreshToken })
-        localStorage.setItem('token', data.accessToken)
-        localStorage.setItem('refreshToken', data.refreshToken)
-        original.headers.Authorization = `Bearer ${data.accessToken}`
-        return api(original)
-      } catch {
-        localStorage.clear()
-        window.location.href = '/login'
-      }
+  (error) => {
+    if (error.response?.status === 401) {
+      window.location.href = error.response.data?.loginUrl || AMBIENTAPP_LOGIN_URL
     }
     return Promise.reject(error)
   }

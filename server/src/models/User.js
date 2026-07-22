@@ -15,9 +15,11 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true
     },
+    // Ya no se usa para login (SSO vía AmbientApp) — se deja opcional en vez
+    // de eliminarla para no romper datos existentes de antes de la migración.
     password: {
       type: String,
-      required: true,
+      required: false,
       minlength: 8
     },
     role: {

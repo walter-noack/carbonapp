@@ -1,64 +1,9 @@
 const jwt = require('jsonwebtoken')
 const User = require('../models/User')
+const Organization = require('../models/Organization')
 
-const generateTokens = (userId) => {
-  const accessToken = jwt.sign({ sub: userId }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '15m'
-  })
-  const refreshToken = jwt.sign({ sub: userId }, process.env.JWT_REFRESH_SECRET, {
-    expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d'
-  })
-  return { accessToken, refreshToken }
-}
-
-const login = async (req, res) => {
-  try {
-    const { email, password } = req.body
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email y contraseña requeridos' })
-    }
-
-    const user = await User.findOne({ email })
-    if (!user || !user.active) {
-      return res.status(401).json({ message: 'Credenciales inválidas' })
-    }
-
-    const valid = await user.comparePassword(password)
-    if (!valid) {
-      return res.status(401).json({ message: 'Credenciales inválidas' })
-    }
-
-    const { accessToken, refreshToken } = generateTokens(user._id)
-    res.json({ accessToken, refreshToken, user })
-  } catch {
-    res.status(500).json({ message: 'Error del servidor' })
-  }
-}
-
-const refresh = async (req, res) => {
-  try {
-    const { refreshToken } = req.body
-    if (!refreshToken) {
-      return res.status(400).json({ message: 'Refresh token requerido' })
-    }
-
-    let payload
-    try {
-      payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET)
-    } catch {
-      return res.status(401).json({ message: 'Refresh token inválido o expirado' })
-    }
-
-    const user = await User.findById(payload.sub)
-    if (!user || !user.active) {
-      return res.status(401).json({ message: 'Usuario no autorizado' })
-    }
-
-    const { accessToken, refreshToken: newRefreshToken } = generateTokens(user._id)
-    res.json({ accessToken, refreshToken: newRefreshToken })
-  } catch {
-    res.status(500).json({ message: 'Error del servidor' })
-  }
+const me = async (req, res) => {
+  res.json(req.user)
 }
 
 const updateProfile = async (req, res) => {
@@ -78,31 +23,53 @@ const updateProfile = async (req, res) => {
   }
 }
 
-const changePassword = async (req, res) => {
+// POST /api/auth/onboarding — primera vez que un usuario autenticado en
+// AmbientApp entra a CarbonApp: crea su Organization + User locales.
+// No usa `authenticate` (que devuelve 404 si el User local no existe todavía)
+// — valida la cookie del hub directamente, igual que valorizApp.
+const onboarding = async (req, res) => {
+  const token = req.cookies?.ambient_token
+  if (!token) {
+    return res.status(401).json({ message: 'No autenticado', loginUrl: 'https://ambientapp.cl/login' })
+  }
+
+  let hubUser
   try {
-    const { currentPassword, newPassword } = req.body
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ message: 'Contraseña actual y nueva requeridas' })
-    }
-    if (newPassword.length < 6) {
-      return res.status(400).json({ message: 'La nueva contraseña debe tener al menos 6 caracteres' })
-    }
-    const user = await User.findById(req.user._id)
-    const valid = await user.comparePassword(currentPassword)
-    if (!valid) {
-      return res.status(400).json({ message: 'Contraseña actual incorrecta' })
-    }
-    user.password = newPassword
-    await user.save()
-    res.json({ message: 'Contraseña actualizada' })
+    hubUser = jwt.verify(token, process.env.JWT_SECRET)
   } catch {
-    res.status(500).json({ message: 'Error del servidor' })
+    return res.status(401).json({ message: 'Sesión inválida o expirada', loginUrl: 'https://ambientapp.cl/login' })
+  }
+
+  try {
+    const { name, orgName, taxId, industry } = req.body
+    if (!name || !orgName) {
+      return res.status(400).json({ message: 'Faltan campos requeridos' })
+    }
+
+    const existente = await User.findOne({ email: hubUser.email })
+    if (existente) {
+      return res.status(409).json({ message: 'El usuario ya tiene onboarding realizado' })
+    }
+
+    const org = await Organization.create({ name: orgName, taxId, industry })
+
+    const user = await User.create({
+      name,
+      email: hubUser.email,
+      role: 'consultant',
+      org: org._id
+    })
+
+    res.status(201).json({ user, organization: org })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
   }
 }
 
-// Stateless logout: el cliente elimina los tokens en su lado
+// Stateless logout: no hay token propio que invalidar; el logout real
+// (borrar la cookie ambient_token) ocurre en el auth-hub central.
 const logout = (_req, res) => {
   res.json({ message: 'Sesión cerrada' })
 }
 
-module.exports = { login, refresh, logout, changePassword, updateProfile }
+module.exports = { me, onboarding, logout, updateProfile }
