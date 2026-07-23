@@ -2,7 +2,9 @@ const InventoryPeriod = require('../models/InventoryPeriod')
 const EmissionSource = require('../models/EmissionSource')
 const EmissionCalculation = require('../models/EmissionCalculation')
 const Organization = require('../models/Organization')
-const { round, sumByScope, sumByCategory, computeIntensities } = require('../services/calculationEngine')
+const User = require('../models/User')
+const { round, sumByScope, sumByCategory, computeIntensities, topSources } = require('../services/calculationEngine')
+const { sendCarbonContext } = require('../services/eriaClient')
 
 const recalculateTotals = async (inventoryPeriodId) => {
   const sources = await EmissionSource.find({ inventoryPeriod: inventoryPeriodId })
@@ -47,7 +49,7 @@ const createCalculationSnapshot = async (period, userId) => {
     }
   }
 
-  return EmissionCalculation.create({
+  const calculation = await EmissionCalculation.create({
     inventoryPeriod: period._id,
     org: orgId,
     totals,
@@ -59,6 +61,30 @@ const createCalculationSnapshot = async (period, userId) => {
     factorsSnapshot,
     generatedBy: userId
   })
+
+  // Empuja el resumen a Eria para que pueda responder preguntas sobre estos
+  // resultados. Se cruza por email (Eria y CarbonApp tienen DBs separadas)
+  // usando el consultor de la organización; si no hay, no se envía — no debe
+  // romper el flujo de completar el período si Eria está caído o no configurado.
+  try {
+    const consultant = await User.findOne({ org: orgId, role: 'consultant' })
+    if (consultant?.email) {
+      await sendCarbonContext({
+        email: consultant.email,
+        year: period.year,
+        orgName: org?.name,
+        totals,
+        topSources: topSources(sources, 3).map((s) => ({ label: s.label, category: s.category, co2e: s.co2e })),
+        nonEvaluatedCategories: period.nonEvaluatedCategories || [],
+        intensities,
+        previousPeriodComparison
+      })
+    }
+  } catch (err) {
+    console.warn('No se pudo enviar contexto a Eria:', err.message)
+  }
+
+  return calculation
 }
 
 const getInventoryPeriods = async (req, res) => {

@@ -88,10 +88,13 @@
 - [x] Alerta visual para categorías Scope 3 no evaluadas
 - [x] Botones de exportación: "Descargar PDF" y "Expediente HuellaChile" *(UI lista, backend en Sprint 4)*
 
-### Integración Asistente IA — pendiente, el Asistente IA aún no está construido
-- [ ] Hook: al finalizar cálculo, inyectar contexto del inventario al Asistente IA
-  - Total por scope, top 3 fuentes, categorías no evaluadas
-  - El asistente puede responder: "¿qué significa que mi Scope 3 sea el 70%?"
+### Integración Asistente IA (Eria — proyecto ambientappIA)
+- [x] Hook: al finalizar cálculo, inyectar contexto del inventario a Eria
+  - `POST` automático a `/api/internal/carbon-context` (Eria) al completar un período, desde `createCalculationSnapshot`
+  - Cruce por email del consultor de la organización (DBs separadas, mismo hub SSO)
+  - Total por scope, top 3 fuentes, categorías no evaluadas, intensidades y comparativo interanual
+  - Eria inyecta un bloque `[HUELLA DE CARBONO]` en su prompt (`promptBuilder.js`) — el asistente puede responder "¿qué significa que mi Scope 3 sea el 70%?"
+  - Fire-and-forget: si Eria no está disponible, no bloquea completar el período (try/catch + warning en logs)
 
 ---
 
